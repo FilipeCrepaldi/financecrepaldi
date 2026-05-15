@@ -33,7 +33,7 @@ export interface Category {
 
 export interface Tag {
   id: string
-  user_id: string
+  user_id: string | null
   name: string
   color: string | null
   created_at: string

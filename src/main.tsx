@@ -9,7 +9,7 @@ import '@/index.css'
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setSession, setInitialized, fetchProfile } = useAuthStore()
-  const { fetchCategories, fetchAliases } = useTransactionStore()
+  const { fetchCategories, fetchAliases, fetchTags } = useTransactionStore()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -18,6 +18,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchProfile(session.user.id)
         fetchCategories(session.user.id)
         fetchAliases(session.user.id)
+        fetchTags(session.user.id)
       }
       setInitialized()
     })
@@ -28,6 +29,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchProfile(session.user.id)
         fetchCategories(session.user.id)
         fetchAliases(session.user.id)
+        fetchTags(session.user.id)
       } else {
         setInitialized()
       }

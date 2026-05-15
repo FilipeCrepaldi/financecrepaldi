@@ -7,12 +7,13 @@ export default function App() {
   useAuth() // inicializa sessão e listener
 
   const { user } = useAuthStore()
-  const { fetchCategories, fetchAliases } = useTransactionStore()
+  const { fetchCategories, fetchAliases, fetchTags } = useTransactionStore()
 
   useEffect(() => {
     if (!user) return
     fetchCategories(user.id)
     fetchAliases(user.id)
+    fetchTags(user.id)
   }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return null // renderização feita pelo RouterProvider no main.tsx

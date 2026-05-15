@@ -1,11 +1,12 @@
 import { create } from 'zustand'
-import { transactionsService, categoriesService } from '@/services'
-import type { Transaction, Category, MerchantAlias } from '@/types'
+import { transactionsService, categoriesService, tagsService } from '@/services'
+import type { Transaction, Category, MerchantAlias, Tag } from '@/types'
 import { currentMonth } from '@/utils'
 
 interface TransactionState {
   transactions: Transaction[]
   categories: Category[]
+  tags: Tag[]
   aliases: MerchantAlias[]
   loading: boolean
   selectedMonth: number
@@ -14,6 +15,7 @@ interface TransactionState {
   setMonth: (month: number, year: number) => void
   fetchTransactions: (userId: string) => Promise<void>
   fetchCategories: (userId: string) => Promise<void>
+  fetchTags: (userId: string) => Promise<void>
   fetchAliases: (userId: string) => Promise<void>
   addTransaction: (t: Transaction) => void
   removeTransaction: (id: string) => void
@@ -25,6 +27,7 @@ const { month, year } = currentMonth()
 export const useTransactionStore = create<TransactionState>((set, get) => ({
   transactions: [],
   categories: [],
+  tags: [],
   aliases: [],
   loading: false,
   selectedMonth: month,
@@ -49,6 +52,11 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   fetchCategories: async (userId) => {
     const data = await categoriesService.list(userId)
     set({ categories: data })
+  },
+
+  fetchTags: async (userId) => {
+    const data = await tagsService.list(userId)
+    set({ tags: data })
   },
 
   fetchAliases: async (userId) => {
