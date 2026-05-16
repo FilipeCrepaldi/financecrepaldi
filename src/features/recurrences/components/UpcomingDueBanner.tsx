@@ -6,7 +6,7 @@ import {
   useRecurrencesStore,
   useTransactionStore,
 } from '@/store'
-import { recurrencesService } from '@/services'
+import { recurrencesService, recurrenceType } from '@/services'
 import { formatCurrency } from '@/utils'
 import type { Recurrence } from '@/types'
 
@@ -128,10 +128,18 @@ export function UpcomingDueBanner() {
               <button
                 onClick={() => handlePay(r)}
                 disabled={isWorking}
-                className="text-xs px-2.5 py-1 rounded bg-income/20 text-income hover:bg-income/30 font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
+                className={`text-xs px-2.5 py-1 rounded font-medium transition-colors flex items-center gap-1 disabled:opacity-50 ${
+                  recurrenceType(r) === 'income'
+                    ? 'bg-income/20 text-income hover:bg-income/30'
+                    : 'bg-accent/20 text-accent hover:bg-accent/30'
+                }`}
               >
                 <Check size={11} />
-                {isWorking ? '...' : 'Pagar'}
+                {isWorking
+                  ? '...'
+                  : recurrenceType(r) === 'income'
+                    ? 'Receber'
+                    : 'Pagar'}
               </button>
             </div>
           )

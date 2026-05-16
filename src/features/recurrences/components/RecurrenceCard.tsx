@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Pencil, Trash2, Check, Pause, Play } from 'lucide-react'
+import { Pencil, Trash2, Check, Pause, Play, ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import type { Recurrence } from '@/types'
 import { formatCurrency } from '@/utils'
+import { recurrenceType } from '@/services'
 import { cn } from '@/lib/utils'
 
 interface RecurrenceCardProps {
@@ -48,6 +49,8 @@ export function RecurrenceCard({
   const due = dueLabel(diff)
   const inactive = !recurrence.is_active
   const canPay = !inactive && diff <= 7
+  const type = recurrenceType(recurrence)
+  const isIncome = type === 'income'
 
   const handleDelete = async () => {
     setWorking(true)
@@ -82,12 +85,20 @@ export function RecurrenceCard({
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0">
           <div
-            className="w-2.5 h-2.5 rounded-full shrink-0"
-            style={{ backgroundColor: recurrence.category?.color ?? '#7c6af7' }}
-          />
+            className={cn(
+              'w-7 h-7 rounded-full shrink-0 flex items-center justify-center',
+              isIncome ? 'bg-income/15 text-income' : 'bg-expense/15 text-expense',
+            )}
+          >
+            {isIncome ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
+          </div>
           <div className="min-w-0">
             <h3 className="text-text-primary font-medium truncate">{recurrence.name}</h3>
-            <p className="text-text-muted text-xs truncate">
+            <p className="text-text-muted text-xs truncate flex items-center gap-1.5">
+              <span
+                className="w-1.5 h-1.5 rounded-full inline-block"
+                style={{ backgroundColor: recurrence.category?.color ?? '#7c6af7' }}
+              />
               {recurrence.category?.name ?? 'Sem categoria'} ·{' '}
               {FREQUENCY_LABEL[recurrence.frequency]}
             </p>
@@ -108,7 +119,13 @@ export function RecurrenceCard({
       </div>
 
       <div className="flex items-baseline justify-between mb-3">
-        <span className="font-mono text-lg font-semibold text-text-primary">
+        <span
+          className={cn(
+            'font-mono text-lg font-semibold',
+            isIncome ? 'text-income' : 'text-text-primary',
+          )}
+        >
+          {isIncome ? '+' : ''}
           {formatCurrency(recurrence.amount)}
         </span>
         <span className="text-text-muted text-xs">
@@ -124,10 +141,15 @@ export function RecurrenceCard({
           <button
             onClick={handlePay}
             disabled={working}
-            className="text-xs px-3 py-1.5 rounded-md bg-income/20 text-income hover:bg-income/30 font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            className={cn(
+              'text-xs px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50',
+              isIncome
+                ? 'bg-income/20 text-income hover:bg-income/30'
+                : 'bg-accent/20 text-accent hover:bg-accent/30',
+            )}
           >
             <Check size={12} />
-            {working ? '...' : 'Marcar pago'}
+            {working ? '...' : isIncome ? 'Confirmar recebimento' : 'Marcar pago'}
           </button>
         ) : (
           <span />

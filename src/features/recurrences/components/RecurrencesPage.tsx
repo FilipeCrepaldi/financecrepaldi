@@ -5,7 +5,7 @@ import {
   useRecurrencesStore,
   useTransactionStore,
 } from '@/store'
-import { recurrencesService } from '@/services'
+import { recurrencesService, recurrenceType } from '@/services'
 import { RecurrenceCard } from './RecurrenceCard'
 import { RecurrenceFormModal } from './RecurrenceFormModal'
 import { RecurrenceCalendar } from './RecurrenceCalendar'
@@ -61,19 +61,25 @@ export default function RecurrencesPage() {
 
   const totals = useMemo(() => {
     const active = recurrences.filter((r) => r.is_active)
-    const monthlyEquivalent = active.reduce((sum, r) => {
+    const monthlyOf = (r: (typeof active)[number]) => {
       switch (r.frequency) {
         case 'daily':
-          return sum + r.amount * 30
+          return r.amount * 30
         case 'weekly':
-          return sum + r.amount * 4.33
+          return r.amount * 4.33
         case 'monthly':
-          return sum + r.amount
+          return r.amount
         case 'yearly':
-          return sum + r.amount / 12
+          return r.amount / 12
       }
-    }, 0)
-    return { count: active.length, monthlyEquivalent }
+    }
+    let income = 0
+    let expense = 0
+    for (const r of active) {
+      if (recurrenceType(r) === 'income') income += monthlyOf(r)
+      else expense += monthlyOf(r)
+    }
+    return { count: active.length, income, expense, net: income - expense }
   }, [recurrences])
 
   const handleNew = () => {
@@ -145,7 +151,20 @@ export default function RecurrencesPage() {
         <div>
           <h1 className="text-2xl font-semibold text-text-primary">Recorrências</h1>
           <p className="text-text-secondary text-sm mt-0.5">
-            {totals.count} ativas · {formatCurrency(totals.monthlyEquivalent)} /mês equivalente
+            {totals.count} ativas
+            {totals.income > 0 && (
+              <>
+                {' · '}
+                <span className="text-income">+{formatCurrency(totals.income)}</span>
+              </>
+            )}
+            {totals.expense > 0 && (
+              <>
+                {' · '}
+                <span className="text-expense">-{formatCurrency(totals.expense)}</span>
+              </>
+            )}
+            <span className="text-text-muted"> /mês equivalente</span>
           </p>
         </div>
         <div className="flex items-center gap-2">

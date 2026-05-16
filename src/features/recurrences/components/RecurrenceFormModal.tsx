@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
-import type { Recurrence, RecurrenceFrequency } from '@/types'
+import type { Recurrence, RecurrenceFrequency, TransactionType } from '@/types'
 import { recurrencesService, type RecurrenceFormData } from '@/services'
 import { useAuthStore, useTransactionStore, useRecurrencesStore } from '@/store'
 import { parseAmount, todayISO } from '@/utils'
+import { cn } from '@/lib/utils'
 
 interface RecurrenceFormModalProps {
   recurrence: Recurrence | null
@@ -46,8 +47,24 @@ export function RecurrenceFormModal({
   const [categoryId, setCategoryId] = useState(
     recurrence?.category_id ?? initial?.category_id ?? '',
   )
+  const [type, setType] = useState<TransactionType>(
+    recurrence?.category?.type === 'income' ? 'income' : 'expense',
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const availableCategories = useMemo(
+    () => categories.filter((c) => c.type === type || c.type === 'both'),
+    [categories, type],
+  )
+
+  const handleTypeChange = (next: TransactionType) => {
+    setType(next)
+    const current = categories.find((c) => c.id === categoryId)
+    if (current && current.type !== next && current.type !== 'both') {
+      setCategoryId('')
+    }
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -65,6 +82,12 @@ export function RecurrenceFormModal({
     if (!name.trim()) return setError('Informe um nome.')
     if (amountNum <= 0) return setError('Informe um valor maior que zero.')
     if (!nextDue) return setError('Informe a próxima data.')
+    if (!categoryId)
+      return setError(
+        type === 'income'
+          ? 'Escolha uma categoria de receita.'
+          : 'Escolha uma categoria de despesa.',
+      )
 
     setSaving(true)
     setError(null)
@@ -121,6 +144,27 @@ export function RecurrenceFormModal({
         </div>
 
         <div className="space-y-4">
+          {/* Tipo */}
+          <div className="inline-flex w-full bg-background-tertiary border border-border rounded-lg p-0.5">
+            {(['expense', 'income'] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => handleTypeChange(t)}
+                className={cn(
+                  'flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+                  type === t
+                    ? t === 'expense'
+                      ? 'bg-expense text-white'
+                      : 'bg-income text-white'
+                    : 'text-text-secondary hover:text-text-primary',
+                )}
+              >
+                {t === 'expense' ? 'Despesa' : 'Receita'}
+              </button>
+            ))}
+          </div>
+
           <div>
             <label className="block text-xs text-text-muted mb-1">Nome</label>
             <input
@@ -183,13 +227,19 @@ export function RecurrenceFormModal({
               onChange={(e) => setCategoryId(e.target.value)}
               className="input-base w-full"
             >
-              <option value="">Sem categoria</option>
-              {categories.map((c) => (
+              <option value="">Escolher categoria</option>
+              {availableCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
             </select>
+            {availableCategories.length === 0 && (
+              <p className="text-xs text-text-muted mt-1">
+                Nenhuma categoria de{' '}
+                {type === 'income' ? 'receita' : 'despesa'} disponível.
+              </p>
+            )}
           </div>
 
           <div>

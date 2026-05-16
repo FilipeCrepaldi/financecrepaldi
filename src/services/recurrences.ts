@@ -7,6 +7,14 @@ import type {
 } from '@/types'
 import { todayISO } from '@/utils'
 
+/**
+ * Tipo de uma recorrência é inferido pela categoria associada.
+ * Categoria 'income' → receita; demais → despesa.
+ */
+export function recurrenceType(rec: Recurrence): TransactionType {
+  return rec.category?.type === 'income' ? 'income' : 'expense'
+}
+
 export interface RecurrenceFormData {
   name: string
   merchant_name: string
@@ -112,8 +120,7 @@ export const recurrencesService = {
     userId: string,
     rec: Recurrence,
   ): Promise<{ transaction: Transaction; recurrence: Recurrence }> {
-    const type: TransactionType =
-      rec.category?.type === 'income' ? 'income' : 'expense'
+    const type: TransactionType = recurrenceType(rec)
 
     const { data: tx, error: txError } = await supabase
       .from('transactions')
