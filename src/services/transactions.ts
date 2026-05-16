@@ -6,6 +6,8 @@ export const transactionsService = {
   async list(userId: string, filters?: {
     month?: number
     year?: number
+    from?: string
+    to?: string
     type?: string
     categoryId?: string
     limit?: number
@@ -25,6 +27,9 @@ export const transactionsService = {
       const start = `${filters.year}-${String(filters.month).padStart(2, '0')}-01`
       const end = format(new Date(filters.year, filters.month, 0), 'yyyy-MM-dd')
       query = query.gte('date', start).lte('date', end)
+    } else if (filters?.from || filters?.to) {
+      if (filters.from) query = query.gte('date', filters.from)
+      if (filters.to) query = query.lte('date', filters.to)
     }
 
     if (filters?.type) query = query.eq('type', filters.type)
