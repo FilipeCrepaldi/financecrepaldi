@@ -156,6 +156,28 @@ export interface BudgetFormData {
 // UTILITÁRIOS
 // ============================================================
 
+export type InsightType =
+  | 'budget_overrun'
+  | 'spike'
+  | 'recurrence_missed'
+  | 'streak'
+
+export type InsightSeverity = 'info' | 'warning' | 'critical' | 'success'
+
+export interface Insight {
+  id: string
+  user_id: string
+  type: InsightType
+  severity: InsightSeverity
+  title: string
+  body: string
+  meta: Record<string, unknown> | null
+  is_read: boolean
+  is_dismissed: boolean
+  fingerprint: string
+  created_at: string
+}
+
 export interface ApiError {
   message: string
   code?: string

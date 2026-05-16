@@ -10,8 +10,9 @@ import {
   Menu,
   X,
   Zap,
+  Sparkles,
 } from 'lucide-react'
-import { useAuthStore } from '@/store'
+import { useAuthStore, useInsightsStore } from '@/store'
 import { cn } from '@/lib/utils'
 import { QuickEntryBar } from './QuickEntryBar'
 
@@ -19,8 +20,9 @@ const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
   { to: '/budgets', icon: Target, label: 'Orçamentos' },
-  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/recurrences', icon: RefreshCw, label: 'Recorrências' },
+  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/insights', icon: Sparkles, label: 'Insights', badgeKey: 'insights' as const },
 ]
 
 interface AppLayoutProps {
@@ -31,6 +33,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [quickEntryOpen, setQuickEntryOpen] = useState(false)
   const { signOut, profile } = useAuthStore()
+  const insights = useInsightsStore((s) => s.insights)
+  const unreadCount = insights.filter((i) => !i.is_read).length
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -77,25 +81,33 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5">
-          {NAV_ITEMS.map(({ to, icon: Icon, label, exact }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={exact}
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
-                  isActive
-                    ? 'bg-accent/15 text-accent font-medium'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-background-tertiary',
-                )
-              }
-            >
-              <Icon size={16} />
-              {label}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map(({ to, icon: Icon, label, exact, badgeKey }) => {
+            const badge = badgeKey === 'insights' ? unreadCount : 0
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={exact}
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
+                    isActive
+                      ? 'bg-accent/15 text-accent font-medium'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-background-tertiary',
+                  )
+                }
+              >
+                <Icon size={16} />
+                <span className="flex-1">{label}</span>
+                {badge > 0 && (
+                  <span className="text-[10px] font-mono font-semibold bg-accent text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {badge}
+                  </span>
+                )}
+              </NavLink>
+            )
+          })}
         </nav>
 
         {/* User */}

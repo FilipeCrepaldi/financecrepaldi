@@ -12,6 +12,7 @@ const TransactionsPage = lazy(() => import('@/features/transactions/components/T
 const BudgetsPage = lazy(() => import('@/features/budgets/components/BudgetsPage'))
 const AnalyticsPage = lazy(() => import('@/features/analytics/components/AnalyticsPage'))
 const RecurrencesPage = lazy(() => import('@/features/recurrences/components/RecurrencesPage'))
+const InsightsPage = lazy(() => import('@/features/insights/components/InsightsPage'))
 
 // Guard de rota autenticada
 function ProtectedRoute() {
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
       { path: '/budgets', element: <BudgetsPage /> },
       { path: '/analytics', element: <AnalyticsPage /> },
       { path: '/recurrences', element: <RecurrencesPage /> },
+      { path: '/insights', element: <InsightsPage /> },
     ],
   },
   {

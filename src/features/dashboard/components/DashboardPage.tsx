@@ -5,6 +5,7 @@ import { transactionsService } from '@/services'
 import { formatCurrency, formatMonthYear, currentMonth } from '@/utils'
 import { useState } from 'react'
 import { UpcomingDueBanner } from '@/features/recurrences/components/UpcomingDueBanner'
+import { InsightsBlock } from '@/features/insights/components/InsightsBlock'
 
 interface Summary {
   balance: number
@@ -41,6 +42,7 @@ export default function DashboardPage() {
       </div>
 
       <UpcomingDueBanner />
+      <InsightsBlock />
 
       {/* Cards resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
