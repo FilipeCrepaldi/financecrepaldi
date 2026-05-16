@@ -4,12 +4,13 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from '@/router'
 import { supabase } from '@/services'
 import { useAuthStore } from '@/store'
-import { useTransactionStore } from '@/store'
+import { useTransactionStore, useRecurrencesStore } from '@/store'
 import '@/index.css'
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setSession, setInitialized, fetchProfile } = useAuthStore()
   const { fetchCategories, fetchAliases, fetchTags } = useTransactionStore()
+  const { fetchRecurrences } = useRecurrencesStore()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -19,6 +20,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchCategories(session.user.id)
         fetchAliases(session.user.id)
         fetchTags(session.user.id)
+        fetchRecurrences(session.user.id)
       }
       setInitialized()
     })
@@ -30,6 +32,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchCategories(session.user.id)
         fetchAliases(session.user.id)
         fetchTags(session.user.id)
+        fetchRecurrences(session.user.id)
       } else {
         setInitialized()
       }

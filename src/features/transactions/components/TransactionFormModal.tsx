@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Repeat } from 'lucide-react'
 import type { Transaction, TransactionType, TransactionFormData } from '@/types'
-import { transactionsService, tagsService } from '@/services'
-import { useAuthStore, useTransactionStore } from '@/store'
-import { todayISO, parseAmount } from '@/utils'
+import { transactionsService, tagsService, recurrencesService, advanceDate } from '@/services'
+import { useAuthStore, useTransactionStore, useRecurrencesStore } from '@/store'
+import { todayISO, parseAmount, formatCurrency } from '@/utils'
 import { cn } from '@/lib/utils'
+
+interface RecurrenceSuggestion {
+  merchant: string
+  amount: number
+  categoryId: string | null
+  date: string
+}
 
 interface TransactionFormModalProps {
   transaction: Transaction | null
@@ -25,11 +32,14 @@ const emptyForm: TransactionFormData = {
 export function TransactionFormModal({ transaction, onClose }: TransactionFormModalProps) {
   const { user } = useAuthStore()
   const { categories, tags, addTransaction, updateTransaction } = useTransactionStore()
+  const { addRecurrence } = useRecurrencesStore()
   const isEdit = transaction !== null
 
   const [form, setForm] = useState<TransactionFormData>(emptyForm)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [suggestion, setSuggestion] = useState<RecurrenceSuggestion | null>(null)
+  const [creatingRec, setCreatingRec] = useState(false)
 
   useEffect(() => {
     if (transaction) {
@@ -109,12 +119,56 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
           await tagsService.syncTransactionTags(created.id, form.tags, [])
         }
         addTransaction({ ...created, category, tags: selectedTags })
+
+        // Auto-detect padrão de recorrência (apenas em despesas com merchant)
+        if (form.type === 'expense' && form.merchant_name.trim()) {
+          const merchant = form.merchant_name.trim()
+          try {
+            const [similar, exists] = await Promise.all([
+              recurrencesService.detectSimilar(user.id, merchant, created.id),
+              recurrencesService.existsForMerchant(user.id, merchant),
+            ])
+            if (similar >= 2 && !exists) {
+              setSuggestion({
+                merchant,
+                amount: amountNum,
+                categoryId: form.category_id || null,
+                date: form.date,
+              })
+              return
+            }
+          } catch (e) {
+            // Falha silenciosa — não bloqueia o fluxo
+            console.warn('detect recurrence failed', e)
+          }
+        }
       }
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleCreateRecurrence = async () => {
+    if (!user || !suggestion) return
+    setCreatingRec(true)
+    try {
+      const created = await recurrencesService.create(user.id, {
+        name: suggestion.merchant,
+        merchant_name: suggestion.merchant,
+        amount: String(suggestion.amount),
+        frequency: 'monthly',
+        next_due_date: advanceDate(suggestion.date, 'monthly'),
+        category_id: suggestion.categoryId ?? '',
+      })
+      addRecurrence(created)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar recorrência.')
+    } finally {
+      setCreatingRec(false)
     }
   }
 
@@ -125,6 +179,48 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
         ? prev.tags.filter((id) => id !== tagId)
         : [...prev.tags, tagId],
     }))
+  }
+
+  if (suggestion) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-md card-elevated shadow-2xl animate-slide-up">
+          <div className="flex items-center gap-2 mb-3">
+            <Repeat size={18} className="text-accent" />
+            <h2 className="text-lg font-semibold text-text-primary">Padrão detectado</h2>
+          </div>
+          <p className="text-text-secondary text-sm mb-4">
+            Você já gastou em <span className="text-text-primary font-medium">{suggestion.merchant}</span>{' '}
+            várias vezes nos últimos 90 dias. Quer transformar em uma recorrência mensal de{' '}
+            <span className="font-mono text-text-primary">{formatCurrency(suggestion.amount)}</span>?
+          </p>
+          <p className="text-text-muted text-xs mb-5">
+            Próximo vencimento: {advanceDate(suggestion.date, 'monthly')}. Você pode ajustar depois.
+          </p>
+          {error && <p className="text-sm text-expense mb-3">{error}</p>}
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-border">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={creatingRec}
+              className="btn-ghost text-sm"
+            >
+              Agora não
+            </button>
+            <button
+              type="button"
+              onClick={handleCreateRecurrence}
+              disabled={creatingRec}
+              className="btn-primary text-sm flex items-center gap-1.5"
+            >
+              <Repeat size={14} />
+              {creatingRec ? 'Criando...' : 'Criar recorrência'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

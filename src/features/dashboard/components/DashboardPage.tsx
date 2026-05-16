@@ -4,6 +4,7 @@ import { useAuthStore, useTransactionStore } from '@/store'
 import { transactionsService } from '@/services'
 import { formatCurrency, formatMonthYear, currentMonth } from '@/utils'
 import { useState } from 'react'
+import { UpcomingDueBanner } from '@/features/recurrences/components/UpcomingDueBanner'
 
 interface Summary {
   balance: number
@@ -38,6 +39,8 @@ export default function DashboardPage() {
           {formatMonthYear(month, year)}
         </p>
       </div>
+
+      <UpcomingDueBanner />
 
       {/* Cards resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
