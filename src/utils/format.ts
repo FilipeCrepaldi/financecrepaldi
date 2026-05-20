@@ -62,6 +62,22 @@ export function currentMonth(): { month: number; year: number } {
   return { month: now.getMonth() + 1, year: now.getFullYear() }
 }
 
+/**
+ * Soma N meses a uma data ISO ('YYYY-MM-DD').
+ * Clampa para o último dia do mês alvo se o dia original não existir.
+ * Ex: addMonthsISO('2026-01-31', 1) → '2026-02-28' (não '2026-03-03').
+ */
+export function addMonthsISO(iso: string, months: number): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const targetMonthIndex = m - 1 + months
+  const targetYear = y + Math.floor(targetMonthIndex / 12)
+  const targetMonth = ((targetMonthIndex % 12) + 12) % 12
+  // último dia do mês alvo
+  const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate()
+  const day = Math.min(d, lastDay)
+  return `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
 // ============================================================
 // NÚMEROS
 // ============================================================

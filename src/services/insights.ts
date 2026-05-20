@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import { budgetsService } from './budgets'
 import { recurrencesService } from './recurrences'
 import { transactionsService } from './transactions'
+import { cardsService } from './cards'
 import type { Insight, InsightSeverity, InsightType } from '@/types'
 import { currentMonth, formatCurrency } from '@/utils'
 
@@ -75,6 +76,7 @@ export const insightsService = {
     insights.push(...(await detectSpikes(userId)))
     insights.push(...(await detectMissedRecurrences(userId)))
     insights.push(...(await detectStreaks(userId)))
+    insights.push(...(await detectCardInsights(userId)))
 
     if (insights.length === 0) return 0
 
@@ -216,6 +218,124 @@ async function detectMissedRecurrences(userId: string): Promise<InsightInput[]> 
         body: `Vencimento previsto em ${r.next_due_date} — ${diffDays} dias atrás. Cobrança perdida ou conta cancelada?`,
         fingerprint: `missed_${r.id}_${r.next_due_date}`,
         meta: { recurrence_id: r.id, due_date: r.next_due_date, days_late: diffDays },
+      })
+    }
+  }
+
+  return results
+}
+
+/**
+ * Quatro regras de cartão:
+ *   - card_limit: limite usado >= 80% (warning) ou >= 100% (critical)
+ *   - card_commitment: parcelas totais a vencer nos próximos 6 meses >= 30% renda mensal estimada
+ *   - card_third_party: uso do mês em cartão de terceiro
+ *   - invoice_due: fatura aberta/fechada vencendo em até 3 dias
+ */
+async function detectCardInsights(userId: string): Promise<InsightInput[]> {
+  const cards = await cardsService.list(userId)
+  const active = cards.filter((c) => c.is_active)
+  if (active.length === 0) return []
+
+  const results: InsightInput[] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayKey = isoDate(today)
+  const monthKey = todayKey.slice(0, 7)
+
+  for (const card of active) {
+    const invoices = await cardsService.listInvoices(card.id)
+    const openInvoice =
+      invoices.find((i) => i.status === 'open') ??
+      invoices.find((i) => i.status === 'closed') ??
+      null
+    const openTotal = openInvoice ? Number(openInvoice.total) : 0
+
+    // 1) card_limit
+    if (card.limit_amount && card.limit_amount > 0 && openTotal > 0) {
+      const pct = (openTotal / card.limit_amount) * 100
+      if (pct >= 100) {
+        results.push({
+          type: 'card_limit',
+          severity: 'critical',
+          title: `Limite do ${card.name} estourado`,
+          body: `${formatCurrency(openTotal)} de ${formatCurrency(card.limit_amount)} (${Math.round(pct)}%)`,
+          fingerprint: `card_limit_${card.id}_${monthKey}_100`,
+          meta: { card_id: card.id, percent: pct },
+        })
+      } else if (pct >= 80) {
+        results.push({
+          type: 'card_limit',
+          severity: 'warning',
+          title: `${card.name} chegando ao limite`,
+          body: `${Math.round(pct)}% do limite usado — ${formatCurrency(card.limit_amount - openTotal)} restantes`,
+          fingerprint: `card_limit_${card.id}_${monthKey}_80`,
+          meta: { card_id: card.id, percent: pct },
+        })
+      }
+    }
+
+    // 2) card_commitment — parcelas a vencer próximos 6 meses
+    const horizon = new Date(today)
+    horizon.setMonth(horizon.getMonth() + 6)
+    const futureInvoices = invoices.filter((i) => {
+      const due = new Date(i.due_date + 'T00:00:00')
+      return i.status !== 'paid' && due >= today && due <= horizon
+    })
+    const futureTotal = futureInvoices.reduce((s, i) => s + Number(i.total), 0)
+    if (futureTotal >= 500) {
+      results.push({
+        type: 'card_commitment',
+        severity: futureTotal >= 3000 ? 'warning' : 'info',
+        title: `Compromisso de ${formatCurrency(futureTotal)} no ${card.name}`,
+        body: `Valor a vencer nas próximas faturas (até 6 meses). Considere antes de novas compras parceladas.`,
+        fingerprint: `card_commitment_${card.id}_${monthKey}`,
+        meta: { card_id: card.id, future_total: futureTotal, months: 6 },
+      })
+    }
+
+    // 3) card_third_party — uso do mês em cartão de terceiro
+    if (card.owner_type === 'third_party' && openTotal > 0) {
+      const owner = card.owner_name?.split(' ')[0] ?? 'terceiro'
+      results.push({
+        type: 'card_third_party',
+        severity: 'info',
+        title: `${formatCurrency(openTotal)} no cartão do ${owner}`,
+        body: `Fatura aberta no cartão emprestado. Visibilidade do quanto você está usando esse compromisso.`,
+        fingerprint: `card_third_party_${card.id}_${monthKey}`,
+        meta: { card_id: card.id, amount: openTotal },
+      })
+    }
+
+    // 4) invoice_due — fatura vence em até 3 dias com saldo a pagar
+    for (const inv of invoices) {
+      if (inv.status === 'paid') continue
+      const due = new Date(inv.due_date + 'T00:00:00')
+      const diffDays = Math.round((due.getTime() - today.getTime()) / 86_400_000)
+      if (diffDays < 0 || diffDays > 3) continue
+
+      const payments = await cardsService.listPayments(inv.id)
+      const paid = payments.reduce((s, p) => s + Number(p.amount), 0)
+      const remaining = Math.max(0, Number(inv.total) - paid)
+      if (remaining <= 0) continue
+
+      results.push({
+        type: 'invoice_due',
+        severity: diffDays <= 1 ? 'critical' : 'warning',
+        title:
+          diffDays === 0
+            ? `Fatura ${card.name} vence hoje`
+            : diffDays === 1
+              ? `Fatura ${card.name} vence amanhã`
+              : `Fatura ${card.name} vence em ${diffDays} dias`,
+        body: `${formatCurrency(remaining)} restante (de ${formatCurrency(Number(inv.total))}).`,
+        fingerprint: `invoice_due_${inv.id}_${todayKey}`,
+        meta: {
+          card_id: card.id,
+          invoice_id: inv.id,
+          due_date: inv.due_date,
+          remaining,
+        },
       })
     }
   }

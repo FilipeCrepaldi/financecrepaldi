@@ -1,10 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Repeat } from 'lucide-react'
+import { X, Repeat, CreditCard, Wallet } from 'lucide-react'
 import type { Transaction, TransactionType, TransactionFormData } from '@/types'
-import { transactionsService, tagsService, recurrencesService, advanceDate } from '@/services'
-import { useAuthStore, useTransactionStore, useRecurrencesStore } from '@/store'
+import {
+  transactionsService,
+  tagsService,
+  recurrencesService,
+  cardsService,
+  advanceDate,
+} from '@/services'
+import {
+  useAuthStore,
+  useTransactionStore,
+  useRecurrencesStore,
+  useCardsStore,
+  useAccountsStore,
+} from '@/store'
 import { todayISO, parseAmount, formatCurrency } from '@/utils'
 import { cn } from '@/lib/utils'
+import { MerchantCombobox } from '@/components/shared/MerchantCombobox'
 
 interface RecurrenceSuggestion {
   merchant: string
@@ -23,7 +36,11 @@ const emptyForm: TransactionFormData = {
   amount: '',
   description: '',
   merchant_name: '',
+  merchant_id: '',
   category_id: '',
+  card_id: '',
+  account_id: '',
+  installment_total: 1,
   date: todayISO(),
   notes: '',
   tags: [],
@@ -33,7 +50,12 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
   const { user } = useAuthStore()
   const { categories, tags, addTransaction, updateTransaction } = useTransactionStore()
   const { addRecurrence } = useRecurrencesStore()
+  const { cards } = useCardsStore()
+  const { accounts, defaultAccountId, setDefaultAccount } = useAccountsStore()
   const isEdit = transaction !== null
+
+  const activeCards = useMemo(() => cards.filter((c) => c.is_active), [cards])
+  const activeAccounts = useMemo(() => accounts.filter((a) => a.is_active), [accounts])
 
   const [form, setForm] = useState<TransactionFormData>(emptyForm)
   const [saving, setSaving] = useState(false)
@@ -48,13 +70,17 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
         amount: String(transaction.amount).replace('.', ','),
         description: transaction.description ?? '',
         merchant_name: transaction.merchant_name ?? '',
+        merchant_id: transaction.merchant_id ?? '',
         category_id: transaction.category_id ?? '',
+        card_id: transaction.card_id ?? '',
+        account_id: transaction.account_id ?? '',
+        installment_total: transaction.installment_total ?? 1,
         date: transaction.date,
         notes: transaction.notes ?? '',
         tags: transaction.tags?.map((t) => t.id) ?? [],
       })
     } else {
-      setForm(emptyForm)
+      setForm({ ...emptyForm, account_id: defaultAccountId ?? '' })
     }
   }, [transaction])
 
@@ -103,21 +129,60 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
       const category = categories.find((c) => c.id === form.category_id)
       const selectedTags = tags.filter((tg) => form.tags.includes(tg.id))
 
+      // Se pago no cartão, aloca em fatura automaticamente antes de salvar
+      let invoiceId: string | null = null
+      if (form.card_id && form.type === 'expense') {
+        const card = activeCards.find((c) => c.id === form.card_id)
+        if (card) {
+          const invoice = await cardsService.getOrCreateInvoiceForDate(card, form.date)
+          invoiceId = invoice.id
+        }
+      }
+
       if (isEdit && transaction) {
         const updated = await transactionsService.update(transaction.id, payload)
         const oldTagIds = transaction.tags?.map((t) => t.id) ?? []
         await tagsService.syncTransactionTags(transaction.id, form.tags, oldTagIds)
+        if (invoiceId) await cardsService.recalculateTotal(invoiceId)
+        if (transaction.invoice_id && transaction.invoice_id !== invoiceId) {
+          await cardsService.recalculateTotal(transaction.invoice_id)
+        }
         updateTransaction({
           ...transaction,
           ...updated,
           category,
           tags: selectedTags,
         })
+      } else if (form.card_id && form.installment_total > 1 && form.type === 'expense') {
+        // Compra parcelada no cartão — gera N transações, cada uma na fatura do mês
+        const card = activeCards.find((c) => c.id === form.card_id)
+        if (!card) throw new Error('Cartão inválido.')
+        const installments = await transactionsService.createWithInstallments(
+          user.id,
+          payload,
+          card,
+        )
+        if (form.tags.length > 0) {
+          // Aplica tags em todas as parcelas
+          await Promise.all(
+            installments.map((tx) =>
+              tagsService.syncTransactionTags(tx.id, form.tags, []),
+            ),
+          )
+        }
+        installments.forEach((tx) =>
+          addTransaction({ ...tx, category, tags: selectedTags }),
+        )
+        onClose()
+        return
       } else {
-        const created = await transactionsService.create(user.id, payload)
+        const created = await transactionsService.create(user.id, payload, {
+          invoice_id: invoiceId,
+        })
         if (form.tags.length > 0) {
           await tagsService.syncTransactionTags(created.id, form.tags, [])
         }
+        if (invoiceId) await cardsService.recalculateTotal(invoiceId)
         addTransaction({ ...created, category, tags: selectedTags })
 
         // Auto-detect padrão de recorrência (apenas em despesas com merchant)
@@ -285,12 +350,33 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
           {/* Estabelecimento */}
           <div>
             <label className="block text-xs text-text-muted mb-1">Estabelecimento</label>
-            <input
-              type="text"
-              value={form.merchant_name}
-              onChange={(e) => update('merchant_name', e.target.value)}
-              placeholder="iFood, Uber, Mercado..."
-              className="input-base w-full"
+            <MerchantCombobox
+              value={form.merchant_id}
+              textValue={form.merchant_name}
+              placeholder="Buscar ou cadastrar..."
+              onChange={(merchantId, merchantName, suggestedCategoryId) => {
+                setForm((prev) => {
+                  // Se merchant sugere categoria e usuário não escolheu uma compatível, aplica
+                  const current = categories.find((c) => c.id === prev.category_id)
+                  const compatible =
+                    current && (current.type === prev.type || current.type === 'both')
+                  const suggested = suggestedCategoryId
+                    ? categories.find((c) => c.id === suggestedCategoryId)
+                    : null
+                  const shouldApplySuggestion =
+                    !compatible &&
+                    suggested &&
+                    (suggested.type === prev.type || suggested.type === 'both')
+                  return {
+                    ...prev,
+                    merchant_id: merchantId,
+                    merchant_name: merchantName,
+                    category_id: shouldApplySuggestion
+                      ? suggestedCategoryId!
+                      : prev.category_id,
+                  }
+                })
+              }}
             />
           </div>
 
@@ -305,6 +391,163 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
               className="input-base w-full"
             />
           </div>
+
+          {/* Pago com: Caixa / Cartão (apenas para despesas) */}
+          {form.type === 'expense' && activeCards.length > 0 && (
+            <div>
+              <label className="block text-xs text-text-muted mb-1">Pago com</label>
+              <div className="inline-flex w-full bg-background-tertiary border border-border rounded-lg p-0.5 mb-2">
+                <button
+                  type="button"
+                  onClick={() => update('card_id', '')}
+                  className={cn(
+                    'flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5',
+                    !form.card_id
+                      ? 'bg-background-secondary text-text-primary'
+                      : 'text-text-secondary hover:text-text-primary',
+                  )}
+                >
+                  <Wallet size={13} />
+                  Caixa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!form.card_id) update('card_id', activeCards[0].id)
+                  }}
+                  className={cn(
+                    'flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5',
+                    form.card_id
+                      ? 'bg-background-secondary text-text-primary'
+                      : 'text-text-secondary hover:text-text-primary',
+                  )}
+                >
+                  <CreditCard size={13} />
+                  Cartão
+                </button>
+              </div>
+              {form.card_id && (
+                <>
+                  <div className="flex flex-wrap gap-1.5">
+                    {activeCards.map((c) => {
+                      const selected = form.card_id === c.id
+                      const isThird = c.owner_type === 'third_party'
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => update('card_id', c.id)}
+                          className={cn(
+                            'text-xs px-2.5 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 border',
+                            selected
+                              ? 'text-white border-transparent'
+                              : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
+                          )}
+                          style={selected ? { backgroundColor: c.color ?? '#7c6af7' } : undefined}
+                        >
+                          <span>{c.name}</span>
+                          {c.last_digits && (
+                            <span className="font-mono opacity-70">··{c.last_digits}</span>
+                          )}
+                          {isThird && (
+                            <span
+                              className={cn(
+                                'text-[9px] uppercase font-mono px-1 rounded',
+                                selected ? 'bg-white/20' : 'bg-warning/20 text-warning',
+                              )}
+                            >
+                              {c.owner_name?.split(' ')[0] ?? '3º'}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Parcelamento */}
+                  <div className="mt-3">
+                    <label className="block text-[10px] uppercase tracking-wide text-text-muted mb-1.5">
+                      Parcelar em
+                    </label>
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      {[1, 2, 3, 4, 6, 10, 12].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => update('installment_total', n)}
+                          className={cn(
+                            'text-xs px-2 py-1 rounded-md font-medium transition-colors border',
+                            form.installment_total === n
+                              ? 'bg-accent text-white border-accent'
+                              : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
+                          )}
+                        >
+                          {n === 1 ? 'À vista' : `${n}×`}
+                        </button>
+                      ))}
+                      <input
+                        type="number"
+                        min={1}
+                        max={36}
+                        value={form.installment_total}
+                        onChange={(e) =>
+                          update('installment_total', Math.max(1, parseInt(e.target.value, 10) || 1))
+                        }
+                        className="input-base text-xs w-16 py-1 font-mono"
+                      />
+                    </div>
+                    {form.installment_total > 1 && parseAmount(form.amount) > 0 && (
+                      <p className="text-[11px] text-text-muted mt-1.5">
+                        {form.installment_total}× de{' '}
+                        <span className="font-mono text-text-primary">
+                          {formatCurrency(parseAmount(form.amount) / form.installment_total)}
+                        </span>{' '}
+                        · distribuído nas próximas {form.installment_total} faturas
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Conta (para receitas sempre, para despesas quando não-cartão) */}
+          {!form.card_id && activeAccounts.length > 0 && (
+            <div>
+              <label className="block text-xs text-text-muted mb-1">
+                {form.type === 'income' ? 'Recebido em' : 'Conta'}
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {activeAccounts.map((a) => {
+                  const selected = form.account_id === a.id
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        update('account_id', a.id)
+                        setDefaultAccount(a.id)
+                      }}
+                      className={cn(
+                        'text-xs px-2.5 py-1 rounded-md font-medium transition-colors border',
+                        selected
+                          ? 'text-white border-transparent'
+                          : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
+                      )}
+                      style={selected ? { backgroundColor: a.color ?? '#7c6af7' } : undefined}
+                    >
+                      {a.name}
+                      {typeof a.balance === 'number' && (
+                        <span className={cn('ml-1.5 font-mono opacity-70', selected ? 'text-white' : 'text-text-muted')}>
+                          {formatCurrency(a.balance)}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Categoria + Data */}
           <div className="grid grid-cols-2 gap-3">

@@ -18,10 +18,12 @@ export function recurrenceType(rec: Recurrence): TransactionType {
 export interface RecurrenceFormData {
   name: string
   merchant_name: string
+  merchant_id?: string
   amount: string
   frequency: RecurrenceFrequency
   next_due_date: string
   category_id: string
+  account_id?: string
 }
 
 export function advanceDate(date: string, frequency: RecurrenceFrequency): string {
@@ -68,10 +70,12 @@ export const recurrencesService = {
         user_id: userId,
         name: data.name,
         merchant_name: data.merchant_name || null,
+        merchant_id: data.merchant_id || null,
         amount: parseFloat(data.amount),
         frequency: data.frequency,
         next_due_date: data.next_due_date,
         category_id: data.category_id || null,
+        account_id: data.account_id || null,
         is_active: true,
       })
       .select('*, category:categories(*)')
@@ -89,6 +93,10 @@ export const recurrencesService = {
     if (payload.name !== undefined) update.name = payload.name
     if (payload.merchant_name !== undefined)
       update.merchant_name = payload.merchant_name || null
+    if (payload.merchant_id !== undefined)
+      update.merchant_id = payload.merchant_id || null
+    if (payload.account_id !== undefined)
+      update.account_id = payload.account_id || null
     if (payload.amount !== undefined) update.amount = payload.amount
     if (payload.frequency !== undefined) update.frequency = payload.frequency
     if (payload.next_due_date !== undefined) update.next_due_date = payload.next_due_date
@@ -130,7 +138,9 @@ export const recurrencesService = {
         amount: rec.amount,
         description: rec.name,
         merchant_name: rec.merchant_name,
+        merchant_id: rec.merchant_id,
         category_id: rec.category_id,
+        account_id: rec.account_id,
         date: todayISO(),
         recurrence_id: rec.id,
       })

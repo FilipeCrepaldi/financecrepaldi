@@ -11,6 +11,9 @@ import {
   X,
   Zap,
   Sparkles,
+  Store,
+  CreditCard,
+  Wallet,
 } from 'lucide-react'
 import { useAuthStore, useInsightsStore } from '@/store'
 import { cn } from '@/lib/utils'
@@ -21,6 +24,9 @@ const NAV_ITEMS = [
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
   { to: '/budgets', icon: Target, label: 'Orçamentos' },
   { to: '/recurrences', icon: RefreshCw, label: 'Recorrências' },
+  { to: '/accounts', icon: Wallet, label: 'Contas' },
+  { to: '/cards', icon: CreditCard, label: 'Cartões' },
+  { to: '/merchants', icon: Store, label: 'Estabelecimentos' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/insights', icon: Sparkles, label: 'Insights', badgeKey: 'insights' as const },
 ]

@@ -6,6 +6,10 @@ import {
   Award,
   X,
   ArrowRight,
+  CreditCard,
+  CalendarClock,
+  Users,
+  Gauge,
   type LucideIcon,
 } from 'lucide-react'
 import type { Insight, InsightSeverity, InsightType } from '@/types'
@@ -23,6 +27,10 @@ const TYPE_ICONS: Record<InsightType, LucideIcon> = {
   spike: TrendingUp,
   recurrence_missed: AlertTriangle,
   streak: Award,
+  card_limit: Gauge,
+  card_commitment: CalendarClock,
+  card_third_party: Users,
+  invoice_due: CreditCard,
 }
 
 const SEVERITY_STYLES: Record<
@@ -60,6 +68,10 @@ const ACTION_BY_TYPE: Record<InsightType, { label: string; path: string } | null
   spike: { label: 'Ver analytics', path: '/analytics' },
   recurrence_missed: { label: 'Ver recorrência', path: '/recurrences' },
   streak: null,
+  card_limit: { label: 'Ver cartões', path: '/cards' },
+  card_commitment: { label: 'Ver cartões', path: '/cards' },
+  card_third_party: { label: 'Ver cartões', path: '/cards' },
+  invoice_due: { label: 'Pagar fatura', path: '/cards' },
 }
 
 function timeAgo(iso: string): string {

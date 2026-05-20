@@ -5,6 +5,10 @@
 export type TransactionType = 'income' | 'expense' | 'transfer'
 export type CategoryType = 'income' | 'expense' | 'both'
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly'
+export type MerchantKind = 'business' | 'person' | 'employer' | 'bank' | 'self'
+export type CardOwnerType = 'self' | 'third_party'
+export type InvoiceStatus = 'open' | 'closed' | 'paid'
+export type AccountKind = 'checking' | 'savings' | 'cash' | 'investment'
 
 // ============================================================
 // ENTIDADES PRINCIPAIS
@@ -44,14 +48,21 @@ export interface Recurrence {
   user_id: string
   name: string
   merchant_name: string | null
+  merchant_id: string | null
   amount: number
   frequency: RecurrenceFrequency
   next_due_date: string
   category_id: string | null
+  card_id: string | null
+  account_id: string | null
+  installment_total: number | null
   is_active: boolean
   created_at: string
   updated_at: string
   category?: Category
+  merchant?: Merchant
+  card?: CreditCard
+  account?: Account
 }
 
 export interface Transaction {
@@ -61,14 +72,25 @@ export interface Transaction {
   amount: number
   description: string | null
   merchant_name: string | null
+  merchant_id: string | null
   category_id: string | null
   recurrence_id: string | null
+  card_id: string | null
+  invoice_id: string | null
+  account_id: string | null
+  transfer_pair_id: string | null
+  installment_total: number | null
+  installment_number: number | null
+  installment_group_id: string | null
   date: string
   is_confirmed: boolean
   notes: string | null
   created_at: string
   updated_at: string
   category?: Category
+  merchant?: Merchant
+  card?: CreditCard
+  account?: Account
   tags?: Tag[]
 }
 
@@ -93,6 +115,75 @@ export interface MerchantAlias {
   category_id: string | null
   is_global: boolean
   created_at: string
+}
+
+export interface Merchant {
+  id: string
+  user_id: string
+  name: string
+  kind: MerchantKind | null
+  default_category_id: string | null
+  color: string | null
+  aliases: string[] | null
+  created_at: string
+  updated_at: string
+  category?: Category
+}
+
+export interface CreditCard {
+  id: string
+  user_id: string
+  name: string
+  last_digits: string | null
+  color: string | null
+  limit_amount: number | null
+  closing_day: number | null
+  due_day: number
+  owner_type: CardOwnerType
+  owner_name: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CardInvoice {
+  id: string
+  card_id: string
+  reference_month: string  // 'YYYY-MM'
+  closing_date: string     // date
+  due_date: string         // date
+  total: number
+  status: InvoiceStatus
+  created_at: string
+  updated_at: string
+  // joins opcionais
+  card?: CreditCard
+  payments?: CardInvoicePayment[]
+  transactions?: Transaction[]
+}
+
+export interface CardInvoicePayment {
+  id: string
+  invoice_id: string
+  amount: number
+  paid_at: string
+  transaction_id: string | null
+  created_at: string
+}
+
+export interface Account {
+  id: string
+  user_id: string
+  name: string
+  kind: AccountKind
+  initial_balance: number
+  color: string | null
+  icon: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  /** Saldo calculado (não persistido) — preenchido por getBalance() ou listWithBalances() */
+  balance?: number
 }
 
 // ============================================================
@@ -139,7 +230,11 @@ export interface TransactionFormData {
   amount: string
   description: string
   merchant_name: string
+  merchant_id: string
   category_id: string
+  card_id: string
+  account_id: string
+  installment_total: number
   date: string
   notes: string
   tags: string[]
@@ -161,6 +256,10 @@ export type InsightType =
   | 'spike'
   | 'recurrence_missed'
   | 'streak'
+  | 'card_limit'
+  | 'card_commitment'
+  | 'card_third_party'
+  | 'invoice_due'
 
 export type InsightSeverity = 'info' | 'warning' | 'critical' | 'success'
 

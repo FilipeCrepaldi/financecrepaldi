@@ -6,11 +6,15 @@ import { formatCurrency, formatMonthYear, currentMonth } from '@/utils'
 import { useState } from 'react'
 import { UpcomingDueBanner } from '@/features/recurrences/components/UpcomingDueBanner'
 import { InsightsBlock } from '@/features/insights/components/InsightsBlock'
+import { CardsBlock } from '@/features/cards/components/CardsBlock'
+import { FutureCommitments } from '@/features/cards/components/FutureCommitments'
+import { AccountsBlock } from '@/features/accounts/components/AccountsBlock'
 
 interface Summary {
   balance: number
   incomeThisMonth: number
   expenseThisMonth: number
+  cardCommitted: number
   committedPercent: number
 }
 
@@ -43,6 +47,9 @@ export default function DashboardPage() {
 
       <UpcomingDueBanner />
       <InsightsBlock />
+      <AccountsBlock />
+      <CardsBlock />
+      <FutureCommitments />
 
       {/* Cards resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

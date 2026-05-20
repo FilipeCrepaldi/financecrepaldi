@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useAuthStore, useTransactionStore } from '@/store'
+import { useAuthStore, useTransactionStore, useAccountsStore } from '@/store'
 import { transactionsService } from '@/services'
 import { parseQuickEntry, suggestCategoryFromText } from '@/utils'
 import type { ParsedEntry } from '@/types'
@@ -12,6 +12,7 @@ export function useQuickEntry() {
 
   const { user } = useAuthStore()
   const { aliases, categories, addTransaction } = useTransactionStore()
+  const defaultAccountId = useAccountsStore((s) => s.defaultAccountId)
 
   const handleInput = useCallback(
     (value: string) => {
@@ -49,7 +50,11 @@ export function useQuickEntry() {
         amount: String(preview.amount),
         description: preview.description ?? '',
         merchant_name: preview.merchantName ?? '',
+        merchant_id: '',
         category_id: preview.categoryId ?? '',
+        card_id: '',
+        account_id: defaultAccountId ?? '',
+        installment_total: 1,
         date: preview.date,
         notes: '',
         tags: [],
@@ -63,7 +68,7 @@ export function useQuickEntry() {
     } finally {
       setLoading(false)
     }
-  }, [preview, user, addTransaction])
+  }, [preview, user, addTransaction, defaultAccountId])
 
   return { input, preview, loading, error, handleInput, submit }
 }

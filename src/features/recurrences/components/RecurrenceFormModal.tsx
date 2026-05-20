@@ -2,9 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import type { Recurrence, RecurrenceFrequency, TransactionType } from '@/types'
 import { recurrencesService, type RecurrenceFormData } from '@/services'
-import { useAuthStore, useTransactionStore, useRecurrencesStore } from '@/store'
-import { parseAmount, todayISO } from '@/utils'
+import {
+  useAuthStore,
+  useTransactionStore,
+  useRecurrencesStore,
+  useAccountsStore,
+} from '@/store'
+import { parseAmount, todayISO, formatCurrency } from '@/utils'
 import { cn } from '@/lib/utils'
+import { MerchantCombobox } from '@/components/shared/MerchantCombobox'
 
 interface RecurrenceFormModalProps {
   recurrence: Recurrence | null
@@ -27,11 +33,19 @@ export function RecurrenceFormModal({
   const { user } = useAuthStore()
   const { categories } = useTransactionStore()
   const { addRecurrence, updateRecurrence } = useRecurrencesStore()
+  const { accounts, defaultAccountId } = useAccountsStore()
   const isEdit = recurrence !== null
+  const activeAccounts = useMemo(() => accounts.filter((a) => a.is_active), [accounts])
 
   const [name, setName] = useState(recurrence?.name ?? initial?.name ?? '')
   const [merchant, setMerchant] = useState(
     recurrence?.merchant_name ?? initial?.merchant_name ?? '',
+  )
+  const [merchantId, setMerchantId] = useState(
+    recurrence?.merchant_id ?? initial?.merchant_id ?? '',
+  )
+  const [accountId, setAccountId] = useState(
+    recurrence?.account_id ?? initial?.account_id ?? defaultAccountId ?? '',
   )
   const [amount, setAmount] = useState(
     recurrence
@@ -96,20 +110,24 @@ export function RecurrenceFormModal({
         const updated = await recurrencesService.update(recurrence.id, {
           name: name.trim(),
           merchant_name: merchant.trim(),
+          merchant_id: merchantId,
           amount: amountNum,
           frequency,
           next_due_date: nextDue,
           category_id: categoryId,
+          account_id: accountId,
         })
         updateRecurrence(updated)
       } else {
         const created = await recurrencesService.create(user.id, {
           name: name.trim(),
           merchant_name: merchant.trim(),
+          merchant_id: merchantId,
           amount: String(amountNum),
           frequency,
           next_due_date: nextDue,
           category_id: categoryId,
+          account_id: accountId,
         })
         addRecurrence(created)
       }
@@ -246,14 +264,57 @@ export function RecurrenceFormModal({
             <label className="block text-xs text-text-muted mb-1">
               Estabelecimento (opcional)
             </label>
-            <input
-              type="text"
-              value={merchant}
-              onChange={(e) => setMerchant(e.target.value)}
-              placeholder="Usado para detectar transações similares"
-              className="input-base w-full"
+            <MerchantCombobox
+              value={merchantId}
+              textValue={merchant}
+              placeholder="Buscar ou cadastrar..."
+              onChange={(mId, mName, suggestedCategoryId) => {
+                setMerchantId(mId)
+                setMerchant(mName)
+                if (suggestedCategoryId && !categoryId) {
+                  const suggested = categories.find((c) => c.id === suggestedCategoryId)
+                  if (suggested && (suggested.type === type || suggested.type === 'both')) {
+                    setCategoryId(suggestedCategoryId)
+                  }
+                }
+              }}
             />
           </div>
+
+          {/* Conta (de qual conta sai/entra o pagamento) */}
+          {activeAccounts.length > 0 && (
+            <div>
+              <label className="block text-xs text-text-muted mb-1">
+                {type === 'income' ? 'Cai na conta' : 'Sai da conta'}
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {activeAccounts.map((a) => {
+                  const selected = accountId === a.id
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setAccountId(a.id)}
+                      className={cn(
+                        'text-xs px-2.5 py-1 rounded-md font-medium transition-colors border',
+                        selected
+                          ? 'text-white border-transparent'
+                          : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
+                      )}
+                      style={selected ? { backgroundColor: a.color ?? '#7c6af7' } : undefined}
+                    >
+                      {a.name}
+                      {typeof a.balance === 'number' && (
+                        <span className={cn('ml-1.5 font-mono opacity-70', selected ? 'text-white' : 'text-text-muted')}>
+                          {formatCurrency(a.balance)}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {error && <p className="text-sm text-expense">{error}</p>}
         </div>
