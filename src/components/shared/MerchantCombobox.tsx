@@ -234,8 +234,7 @@ function MerchantQuickCreate({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSave = async () => {
     if (!user) return
     if (!name.trim()) {
       setError('Informe um nome.')
@@ -263,11 +262,21 @@ function MerchantQuickCreate({
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      e.stopPropagation()
+      handleSave()
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
-      <form
-        onSubmit={handleSave}
+      <div
+        role="dialog"
+        aria-modal="true"
+        onKeyDown={handleKeyDown}
         className="relative w-full max-w-sm card-elevated shadow-2xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
@@ -348,11 +357,16 @@ function MerchantQuickCreate({
           >
             Cancelar
           </button>
-          <button type="submit" disabled={saving} className="btn-primary text-sm">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary text-sm"
+          >
             {saving ? 'Salvando...' : 'Cadastrar'}
           </button>
         </div>
-      </form>
+      </div>
     </div>
   )
 }
