@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { TrendingUp, TrendingDown, Wallet, Zap } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Zap, CreditCard } from 'lucide-react'
 import { useAuthStore, useTransactionStore } from '@/store'
 import { transactionsService } from '@/services'
 import { formatCurrency, formatMonthYear, currentMonth } from '@/utils'
@@ -122,8 +122,9 @@ export default function DashboardPage() {
                   <p className="text-text-primary text-sm truncate">
                     {t.merchant_name ?? t.description ?? 'Sem descrição'}
                   </p>
-                  <p className="text-text-muted text-xs">
+                  <p className="text-text-muted text-xs flex items-center gap-1.5">
                     {t.category?.name ?? 'Sem categoria'} · {t.date}
+                    {t.card_id && <CreditCard size={10} />}
                   </p>
                 </div>
                 <span className={t.type === 'income' ? 'amount-income' : 'amount-expense'}>

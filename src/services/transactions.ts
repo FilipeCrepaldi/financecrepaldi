@@ -89,8 +89,12 @@ export const transactionsService = {
     if (data.merchant_name !== undefined) payload.merchant_name = data.merchant_name || null
     if (data.merchant_id !== undefined) payload.merchant_id = data.merchant_id || null
     if (data.category_id !== undefined) payload.category_id = data.category_id || null
-    if (data.card_id !== undefined) payload.card_id = data.card_id || null
-    if (data.account_id !== undefined) payload.account_id = data.account_id || null
+    const updatedCardId = data.card_id !== undefined ? (data.card_id || null) : undefined
+    if (updatedCardId !== undefined) payload.card_id = updatedCardId
+    if (data.account_id !== undefined) {
+      // Pagamento com cartão → account_id deve ser null para não contar no saldo da conta
+      payload.account_id = updatedCardId ? null : (data.account_id || null)
+    }
     if (data.date) payload.date = data.date
     if (data.notes !== undefined) payload.notes = data.notes || null
 

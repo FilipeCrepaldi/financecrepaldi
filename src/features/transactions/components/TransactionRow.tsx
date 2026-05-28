@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2, Tag as TagIcon } from 'lucide-react'
+import { Trash2, Tag as TagIcon, CreditCard } from 'lucide-react'
 import type { Transaction } from '@/types'
 import { formatCurrency } from '@/utils'
 import { cn } from '@/lib/utils'
@@ -59,6 +59,12 @@ export function TransactionRow({ transaction: t, onDelete, onEdit }: Transaction
           )}
           {t.description && t.merchant_name && (
             <span className="text-text-muted text-xs truncate">· {t.description}</span>
+          )}
+          {t.card_id && (
+            <span className="text-text-muted text-[10px] flex items-center gap-0.5">
+              <CreditCard size={9} />
+              cartão
+            </span>
           )}
           {t.tags?.map((tag) => (
             <span
