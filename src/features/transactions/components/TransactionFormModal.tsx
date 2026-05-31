@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { X, Repeat, CreditCard, Wallet } from 'lucide-react'
 import type { Transaction, TransactionType, TransactionFormData } from '@/types'
 import {
@@ -18,6 +18,79 @@ import {
 import { todayISO, parseAmount, formatCurrency } from '@/utils'
 import { cn } from '@/lib/utils'
 import { MerchantCombobox } from '@/components/shared/MerchantCombobox'
+
+// Input de data no formato brasileiro DD/MM/AAAA — armazena ISO internamente
+function DateInput({
+  value,
+  onChange,
+  className,
+}: {
+  value: string
+  onChange: (iso: string) => void
+  className?: string
+}) {
+  const isoToDisplay = (iso: string) => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      const [y, m, d] = iso.split('-')
+      return `${d}/${m}/${y}`
+    }
+    return ''
+  }
+
+  const [display, setDisplay] = useState(() => isoToDisplay(value))
+  const skipSync = useRef(false)
+
+  useEffect(() => {
+    if (skipSync.current) {
+      skipSync.current = false
+      return
+    }
+    setDisplay((prev) => {
+      const next = isoToDisplay(value)
+      return prev !== next ? next : prev
+    })
+  }, [value])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+    let fmt = digits
+    if (digits.length > 4) {
+      fmt = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
+    } else if (digits.length > 2) {
+      fmt = `${digits.slice(0, 2)}/${digits.slice(2)}`
+    }
+    setDisplay(fmt)
+
+    if (digits.length === 8) {
+      const d = digits.slice(0, 2)
+      const m = digits.slice(2, 4)
+      const y = digits.slice(4, 8)
+      const candidate = `${y}-${m}-${d}`
+      const dt = new Date(`${candidate}T00:00:00`)
+      const valid =
+        !isNaN(dt.getTime()) &&
+        dt.getFullYear() === +y &&
+        dt.getMonth() + 1 === +m &&
+        dt.getDate() === +d
+      if (valid) {
+        skipSync.current = true
+        onChange(candidate)
+      }
+    }
+  }
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={display}
+      onChange={handleChange}
+      placeholder="DD/MM/AAAA"
+      maxLength={10}
+      className={className}
+    />
+  )
+}
 
 interface RecurrenceSuggestion {
   merchant: string
@@ -464,8 +537,8 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
                     })}
                   </div>
 
-                  {/* Parcelamento */}
-                  <div className="mt-3">
+                  {/* Parcelamento — apenas na criação; editar parcelas individuais não é suportado */}
+                  {!isEdit && <div className="mt-3">
                     <label className="block text-[10px] uppercase tracking-wide text-text-muted mb-1.5">
                       Parcelar em
                     </label>
@@ -505,7 +578,7 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
                         · distribuído nas próximas {form.installment_total} faturas
                       </p>
                     )}
-                  </div>
+                  </div>}
                 </>
               )}
             </div>
@@ -568,10 +641,9 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
             </div>
             <div>
               <label className="block text-xs text-text-muted mb-1">Data</label>
-              <input
-                type="date"
+              <DateInput
                 value={form.date}
-                onChange={(e) => update('date', e.target.value)}
+                onChange={(iso) => update('date', iso)}
                 className="input-base w-full"
               />
             </div>

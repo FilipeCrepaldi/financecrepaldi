@@ -53,7 +53,7 @@ export default function TransactionsPage() {
     return filtered.reduce(
       (acc, t) => {
         if (t.type === 'income') acc.income += t.amount
-        else if (t.type === 'expense') acc.expense += t.amount
+        else if (t.type === 'expense' && !t.card_id) acc.expense += t.amount
         return acc
       },
       { income: 0, expense: 0 },
@@ -117,12 +117,12 @@ export default function TransactionsPage() {
           </p>
         </div>
         <div>
-          <p className="text-text-muted text-xs">Despesas</p>
+          <p className="text-text-muted text-xs">Despesas (caixa)</p>
           <p className="text-expense font-mono font-medium mt-0.5">
             -{formatCurrency(totals.expense)}
           </p>
         </div>
-        <div className="sm:ml-auto">
+<div className="sm:ml-auto">
           <p className="text-text-muted text-xs">Saldo</p>
           <p
             className={`font-mono font-medium mt-0.5 ${totals.income - totals.expense >= 0 ? 'text-income' : 'text-expense'}`}

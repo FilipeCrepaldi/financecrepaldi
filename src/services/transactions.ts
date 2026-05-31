@@ -148,12 +148,15 @@ export const transactionsService = {
       const invoice = await cardsService.getOrCreateInvoiceForDate(card, date)
       affectedInvoices.add(invoice.id)
 
+      // Última parcela absorve o resíduo de arredondamento
+      const amount = k === n ? Math.round((total - per * (n - 1)) * 100) / 100 : per
+
       const { data: tx, error } = await supabase
         .from('transactions')
         .insert({
           user_id: userId,
           type: data.type,
-          amount: per,
+          amount,
           description: data.description || null,
           merchant_name: data.merchant_name || null,
           merchant_id: data.merchant_id || null,
