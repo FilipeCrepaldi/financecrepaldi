@@ -19,9 +19,9 @@ const KIND_OPTIONS: { value: AccountKind; label: string; description: string }[]
 ]
 
 const COLOR_PRESETS = [
-  '#7c6af7', '#8B5CF6', '#a855f7', '#ec4899', '#f43f5e',
+  '#7B1E3A', '#BE4B6B', '#A33150', '#CDAA5E', '#f43f5e',
   '#f97316', '#eab308', '#22c55e', '#10b981', '#06b6d4',
-  '#3b82f6', '#6366F1',
+  '#3b82f6', '#ec4899',
 ]
 
 export function AccountEditModal({ account, onClose }: AccountEditModalProps) {

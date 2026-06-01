@@ -19,23 +19,23 @@ export function MonthSelector({ month, year, onChange }: MonthSelectorProps) {
   }
 
   return (
-    <div className="inline-flex items-center gap-1 bg-background-secondary border border-border rounded-lg">
+    <div className="inline-flex items-center bg-background-secondary border border-border rounded-xl overflow-hidden">
       <button
         onClick={goPrev}
-        className="p-2 text-text-secondary hover:text-text-primary hover:bg-background-tertiary rounded-l-lg transition-colors"
+        className="p-2 text-text-secondary hover:text-text-primary hover:bg-background-tertiary transition-colors"
         aria-label="Mês anterior"
       >
-        <ChevronLeft size={16} />
+        <ChevronLeft size={15} />
       </button>
-      <span className="px-2 text-sm text-text-primary capitalize min-w-[140px] text-center">
+      <span className="px-3 text-sm text-text-primary capitalize min-w-[140px] text-center font-medium">
         {formatMonthYear(month, year)}
       </span>
       <button
         onClick={goNext}
-        className="p-2 text-text-secondary hover:text-text-primary hover:bg-background-tertiary rounded-r-lg transition-colors"
+        className="p-2 text-text-secondary hover:text-text-primary hover:bg-background-tertiary transition-colors"
         aria-label="Próximo mês"
       >
-        <ChevronRight size={16} />
+        <ChevronRight size={15} />
       </button>
     </div>
   )

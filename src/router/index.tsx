@@ -16,6 +16,7 @@ const InsightsPage = lazy(() => import('@/features/insights/components/InsightsP
 const MerchantsPage = lazy(() => import('@/features/merchants/components/MerchantsPage'))
 const CardsPage = lazy(() => import('@/features/cards/components/CardsPage'))
 const AccountsPage = lazy(() => import('@/features/accounts/components/AccountsPage'))
+const CategoriesPage = lazy(() => import('@/features/categories/components/CategoriesPage'))
 
 // Guard de rota autenticada
 function ProtectedRoute() {
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
       { path: '/merchants', element: <MerchantsPage /> },
       { path: '/cards', element: <CardsPage /> },
       { path: '/accounts', element: <AccountsPage /> },
+      { path: '/categories', element: <CategoriesPage /> },
     ],
   },
   {

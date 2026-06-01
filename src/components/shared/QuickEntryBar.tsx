@@ -32,16 +32,16 @@ export function QuickEntryBar({ onClose }: QuickEntryBarProps) {
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="relative w-full max-w-lg animate-slide-up">
         {/* Input principal */}
-        <div className="card-elevated shadow-2xl">
+        <div className="card-elevated shadow-lg">
           <div className="flex items-center gap-3">
-            <Zap size={18} className="text-accent shrink-0" />
+            <Zap size={17} className="text-accent shrink-0" strokeWidth={2.5} />
             <input
               ref={inputRef}
               value={input}
@@ -52,7 +52,7 @@ export function QuickEntryBar({ onClose }: QuickEntryBarProps) {
             {input && (
               <button
                 onClick={() => handleInput('')}
-                className="text-text-muted hover:text-text-primary transition-colors text-xs"
+                className="text-text-muted hover:text-text-primary transition-colors text-xs font-mono px-1.5 py-0.5 rounded border border-border"
               >
                 esc
               </button>
@@ -82,7 +82,7 @@ export function QuickEntryBar({ onClose }: QuickEntryBarProps) {
               )}
 
               {category && (
-                <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-background-tertiary text-text-secondary border border-border ml-auto">
+                <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20 ml-auto">
                   <Tag size={10} />
                   {category.name}
                 </span>
@@ -98,17 +98,21 @@ export function QuickEntryBar({ onClose }: QuickEntryBarProps) {
         {/* Hint */}
         <div className="flex items-center justify-between mt-2 px-1">
           <p className="text-xs text-text-muted">
-            Formato: <span className="font-mono text-text-secondary">valor merchant descrição</span>
+            <span className="font-mono text-text-secondary">valor</span>
+            {' '}merchant{' '}
+            <span className="text-text-muted">descrição</span>
           </p>
           {preview && (
             <button
               onClick={() => submit().then(onClose)}
               disabled={loading}
-              className="flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover font-medium transition-colors"
+              className="flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover font-semibold transition-colors"
             >
-              {loading ? 'Salvando...' : 'Salvar'}
-              <ArrowRight size={12} />
-              <kbd className="font-mono bg-accent/10 px-1 rounded">↵</kbd>
+              {loading ? 'Salvando…' : 'Salvar'}
+              <ArrowRight size={11} />
+              <kbd className="font-mono bg-accent/15 text-accent px-1.5 py-0.5 rounded border border-accent/20">
+                ↵
+              </kbd>
             </button>
           )}
         </div>

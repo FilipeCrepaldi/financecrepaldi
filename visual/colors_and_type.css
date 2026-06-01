@@ -1,0 +1,213 @@
+/* ============================================================
+   FINANCE MIRROR — Design Tokens
+   "Seu Reflexo Financeiro."
+   Color + Type foundations. Import this into any artifact.
+   Fonts: Inter (genuine brand font, free on Google Fonts).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ---------- BRAND PALETTE ---------- */
+  --vinho-profundo: #7B1E3A;   /* primary — maturity, sophistication */
+  --rosa-rubi:      #BE4B6B;   /* secondary — humanity, modernity */
+  --bege-rosado:    #E7CFC4;   /* official light — warmth, balance */
+  --dourado-suave:  #CDAA5E;   /* accent / premium — use sparingly */
+  --preto-vinho:    #1A1416;   /* institutional dark */
+
+  /* Tonal extensions of the wine (oklch-harmonized) */
+  --vinho-900: #140A0E;
+  --vinho-800: #1A1416;
+  --vinho-700: #2B141C;
+  --vinho-600: #4A1626;
+  --vinho-500: #7B1E3A;
+  --vinho-400: #A33150;
+  --vinho-300: #BE4B6B;
+  --vinho-200: #D98AA0;
+  --vinho-100: #EAC2CE;
+
+  /* ---------- FUNCTIONAL (FINANCE SEMANTICS) ---------- */
+  --receita:  #22C55E;   /* income / growth */
+  --receita-muted: #22C55E1F;
+  --despesa:  #DC4C64;   /* expense / loss / alert */
+  --despesa-muted: #DC4C641F;
+  --info:     #1E3A5F;   /* reports / neutral indicators */
+  --info-soft:#3B6098;
+  --aviso:    #D4AF37;   /* warning / near-goal */
+  --aviso-muted: #D4AF371F;
+
+  /* ---------- DARK MODE (default surface) ---------- */
+  --dk-bg:        #1A1416;
+  --dk-bg-2:      #211619;   /* recessed */
+  --dk-card:      #241A1E;
+  --dk-card-2:    #2E2025;   /* elevated card */
+  --dk-border:    #3A2A30;
+  --dk-border-soft:#2C2024;
+  --dk-active:    #7B1E3A;
+  --dk-highlight: #CDAA5E;
+  --dk-fg1:       #F5EAE5;   /* primary text */
+  --dk-fg2:       #C7AEB3;   /* secondary text */
+  --dk-fg3:       #8A6F76;   /* muted text */
+
+  /* ---------- LIGHT MODE ---------- */
+  --lt-bg:        #E7CFC4;
+  --lt-bg-2:      #EFDED6;
+  --lt-card:      #F3E6DF;
+  --lt-card-2:    #FBF3EE;   /* elevated card */
+  --lt-border:    #D8BCB0;
+  --lt-border-soft:#E3CcC1;
+  --lt-active:    #7B1E3A;
+  --lt-highlight: #CDAA5E;
+  --lt-fg1:       #2B1F22;   /* primary text */
+  --lt-fg2:       #6B5258;   /* secondary text */
+  --lt-fg3:       #9C8087;   /* muted text */
+
+  /* ---------- TYPE ---------- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace; /* financial values */
+
+  --fw-regular: 400;  /* body content */
+  --fw-medium:  500;  /* financial values */
+  --fw-semibold:600;  /* subtitles, primary brand weight */
+  --fw-bold:    700;  /* titles */
+  --fw-extra:   800;  /* hero display */
+
+  /* Type scale (1.250 major-third-ish, tuned) */
+  --text-display: 3.5rem;   /* 56px hero */
+  --text-h1:      2rem;     /* 32px */
+  --text-h2:      1.5rem;   /* 24px */
+  --text-h3:      1.25rem;  /* 20px */
+  --text-lg:      1.125rem; /* 18px */
+  --text-base:    1rem;     /* 16px */
+  --text-sm:      0.875rem; /* 14px */
+  --text-xs:      0.75rem;  /* 12px */
+
+  --leading-tight: 1.15;
+  --leading-snug:  1.35;
+  --leading-normal:1.55;
+  --tracking-tight: -0.02em;
+  --tracking-label: 0.14em;  /* uppercase eyebrow labels */
+
+  /* ---------- RADII ---------- */
+  --r-sm: 8px;
+  --r-md: 12px;   /* default — modern, soft */
+  --r-lg: 16px;   /* cards */
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  /* ---------- SHADOWS (glass floating, never heavy) ---------- */
+  --shadow-sm: 0 1px 2px rgba(20, 10, 14, 0.18);
+  --shadow-md: 0 4px 16px rgba(20, 10, 14, 0.22);
+  --shadow-lg: 0 12px 40px rgba(20, 10, 14, 0.30);
+  --shadow-glow-gold: 0 0 0 1px rgba(205, 170, 94, 0.35), 0 6px 24px rgba(205, 170, 94, 0.18);
+  --shadow-glow-wine: 0 8px 30px rgba(123, 30, 58, 0.35);
+
+  /* ---------- SPACING (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* ---------- MOTION ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 360ms;
+}
+
+/* ============================================================
+   SEMANTIC ALIASES — default to DARK (premium primary surface)
+   Add  data-theme="light"  on a wrapper to flip to light mode.
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  --bg:        var(--dk-bg);
+  --bg-2:      var(--dk-bg-2);
+  --card:      var(--dk-card);
+  --card-2:    var(--dk-card-2);
+  --border:    var(--dk-border);
+  --border-soft:var(--dk-border-soft);
+  --active:    var(--dk-active);
+  --highlight: var(--dk-highlight);
+  --fg1:       var(--dk-fg1);
+  --fg2:       var(--dk-fg2);
+  --fg3:       var(--dk-fg3);
+}
+
+[data-theme="light"] {
+  --bg:        var(--lt-bg);
+  --bg-2:      var(--lt-bg-2);
+  --card:      var(--lt-card);
+  --card-2:    var(--lt-card-2);
+  --border:    var(--lt-border);
+  --border-soft:var(--lt-border-soft);
+  --active:    var(--lt-active);
+  --highlight: var(--lt-highlight);
+  --fg1:       var(--lt-fg1);
+  --fg2:       var(--lt-fg2);
+  --fg3:       var(--lt-fg3);
+}
+
+/* ============================================================
+   ELEMENT DEFAULTS
+   ============================================================ */
+.fm-display {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-extra);
+  font-size: var(--text-display);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+}
+h1, .fm-h1 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  font-size: var(--text-h1);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+}
+h2, .fm-h2 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-h2);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+}
+h3, .fm-h3 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-h3);
+  line-height: var(--leading-snug);
+  color: var(--fg1);
+}
+p, .fm-body {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-regular);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--fg2);
+}
+.fm-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--highlight);
+}
+/* Financial values — always mono, medium weight */
+.fm-value {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.fm-value--income  { color: var(--receita); }
+.fm-value--expense { color: var(--despesa); }

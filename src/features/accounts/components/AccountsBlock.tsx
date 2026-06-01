@@ -77,7 +77,7 @@ export function AccountsBlock() {
               <div className="flex items-center gap-2 mb-1.5">
                 <div
                   className="w-6 h-6 rounded shrink-0 flex items-center justify-center text-white"
-                  style={{ backgroundColor: a.color ?? '#7c6af7' }}
+                  style={{ backgroundColor: a.color ?? '#7B1E3A' }}
                 >
                   <Icon size={11} />
                 </div>

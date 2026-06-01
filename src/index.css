@@ -3,12 +3,85 @@
 @tailwind utilities;
 
 @layer base {
+  /* ============================================================
+     CANAIS RGB DAS CORES DE SUPERFÍCIE
+     Uso de canais (ex: "26 20 22") permite que o Tailwind aplique
+     modificadores de opacidade (bg-background/30) + troca dark/light.
+     ============================================================ */
+
+  :root,
+  [data-theme="dark"] {
+    --bg-rgb:           26 20 22;      /* #1A1416 */
+    --bg2-rgb:          33 22 25;      /* #211619 */
+    --card-rgb:         36 26 30;      /* #241A1E */
+    --card2-rgb:        46 32 37;      /* #2E2025 */
+    --border-rgb:       58 42 48;      /* #3A2A30 */
+    --border-soft-rgb:  44 32 36;      /* #2C2024 */
+    --border-strong-rgb:74 32 53;      /* #4A2035 */
+    --fg1-rgb:          245 234 229;   /* #F5EAE5 */
+    --fg2-rgb:          199 174 179;   /* #C7AEB3 */
+    --fg3-rgb:          138 111 118;   /* #8A6F76 */
+  }
+
+  [data-theme="light"] {
+    --bg-rgb:           231 207 196;   /* #E7CFC4 */
+    --bg2-rgb:          239 222 214;   /* #EFDED6 */
+    --card-rgb:         243 230 223;   /* #F3E6DF */
+    --card2-rgb:        251 243 238;   /* #FBF3EE */
+    --border-rgb:       216 188 176;   /* #D8BCB0 */
+    --border-soft-rgb:  227 204 193;   /* #E3CCC1 */
+    --border-strong-rgb:170 140 130;   /* #AA8C82 */
+    --fg1-rgb:          43 31 34;      /* #2B1F22 */
+    --fg2-rgb:          107 82 88;     /* #6B5258 */
+    --fg3-rgb:          156 128 135;   /* #9C8087 */
+  }
+
+  /* ============================================================
+     TOKENS DE MARCA — fixos em ambos os modos
+     ============================================================ */
+  :root {
+    --vinho-profundo: #7B1E3A;
+    --vinho-400:      #A33150;
+    --rosa-rubi:      #BE4B6B;
+    --bege-rosado:    #E7CFC4;
+    --dourado-suave:  #CDAA5E;
+    --preto-vinho:    #1A1416;
+
+    --receita:  #22C55E;
+    --despesa:  #DC4C64;
+    --aviso:    #D4AF37;
+
+    --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+    --r-sm:   8px;
+    --r-md:  12px;
+    --r-lg:  16px;
+    --r-xl:  20px;
+    --r-pill: 999px;
+
+    --shadow-sm:        0 1px 2px rgba(20, 10, 14, 0.18);
+    --shadow-md:        0 4px 16px rgba(20, 10, 14, 0.22);
+    --shadow-lg:        0 12px 40px rgba(20, 10, 14, 0.30);
+    --shadow-glow-gold: 0 0 0 1px rgba(205, 170, 94, 0.35), 0 6px 24px rgba(205, 170, 94, 0.18);
+    --shadow-glow-wine: 0 8px 30px rgba(123, 30, 58, 0.35);
+
+    --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --dur-fast:  150ms;
+    --dur-base:  220ms;
+    --dur-slow:  360ms;
+  }
+
+  /* ============================================================
+     RESET E DEFAULTS
+     ============================================================ */
   * {
     @apply border-border;
   }
 
   html {
-    @apply bg-background text-text-primary antialiased;
+    @apply bg-background text-text-primary antialiased font-sans;
     font-feature-settings: 'liga' 1, 'calt' 1;
   }
 
@@ -16,61 +89,58 @@
     @apply bg-background min-h-screen;
   }
 
-  /* Scrollbar custom */
+  /* Scrollbar personalizada */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
-
   ::-webkit-scrollbar-track {
     @apply bg-background;
   }
-
   ::-webkit-scrollbar-thumb {
     @apply bg-border rounded-full;
   }
-
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-border-strong;
   }
 
-  /* Selection */
   ::selection {
-    @apply bg-accent/30 text-text-primary;
+    @apply bg-accent/25 text-text-primary;
   }
 }
 
 @layer components {
-  /* Card base */
+  /* Card base — 16px radius conforme design system */
   .card {
-    @apply bg-background-secondary border border-border rounded-lg p-4;
+    @apply bg-background-secondary border border-border rounded-xl p-4;
   }
 
   .card-elevated {
-    @apply bg-background-elevated border border-border rounded-lg p-4;
+    @apply bg-background-elevated border border-border rounded-xl p-4;
   }
 
-  /* Input base */
+  /* Input base — 12px radius */
   .input-base {
     @apply bg-background-tertiary border border-border rounded-lg px-3 py-2
            text-text-primary placeholder:text-text-muted
-           focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent
+           focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
            transition-colors duration-150;
   }
 
-  /* Button variants */
+  /* Botão primário — vinho, hover rubi */
   .btn-primary {
-    @apply bg-accent hover:bg-accent-hover text-white font-medium
-           px-4 py-2 rounded-lg transition-colors duration-150
+    @apply bg-accent hover:bg-accent-hover active:scale-[0.97] text-white font-medium
+           px-4 py-2 rounded-lg transition-all duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
+  /* Botão ghost — texto secundário */
   .btn-ghost {
     @apply text-text-secondary hover:text-text-primary hover:bg-background-tertiary
            px-3 py-2 rounded-lg transition-colors duration-150;
   }
 
-  /* Amount colors */
+  /* Valores monetários — sempre mono */
   .amount-income {
     @apply text-income font-mono font-medium;
   }

@@ -24,6 +24,23 @@ export const categoriesService = {
     return data as Category
   },
 
+  async update(id: string, payload: Partial<Pick<Category, 'name' | 'icon' | 'color' | 'type'>>) {
+    const { data, error } = await supabase
+      .from('categories')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data as Category
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase.from('categories').delete().eq('id', id)
+    if (error) throw error
+  },
+
   async getMerchantAliases(userId: string) {
     const { data, error } = await supabase
       .from('merchant_aliases')

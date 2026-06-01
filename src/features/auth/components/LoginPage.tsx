@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Zap } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useAuthStore } from '@/store'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { signIn, loading } = useAuthStore()
 
@@ -20,57 +21,87 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-            <Zap size={16} className="text-white" />
-          </div>
-          <span className="font-semibold text-text-primary text-lg">Finance Mirror</span>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+      {/* Logo + identidade */}
+      <div className="mb-10 flex flex-col items-center gap-3">
+        <img
+          src="/logo.png"
+          alt="Finance Mirror"
+          className="w-24 h-24 object-contain drop-shadow-lg"
+        />
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight leading-none">
+            finance<span className="text-rubi">-</span>mirror
+          </h1>
+          <p className="text-[11px] text-text-muted uppercase tracking-[0.2em] mt-1.5">
+            Seu reflexo financeiro.
+          </p>
+        </div>
+      </div>
+
+      {/* Formulário */}
+      <form onSubmit={handleSubmit} className="w-full max-w-[320px] space-y-3">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input-base w-full rounded-2xl py-3.5 pl-5 text-sm"
+          placeholder="E-mail"
+          required
+          autoComplete="email"
+        />
+
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input-base w-full rounded-2xl py-3.5 pl-5 pr-11 text-sm"
+            placeholder="Senha"
+            required
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((p) => !p)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
         </div>
 
-        <h1 className="text-2xl font-semibold text-text-primary mb-1">Entrar</h1>
-        <p className="text-text-secondary text-sm mb-6">Bem-vindo de volta.</p>
+        {error && (
+          <p className="text-expense text-sm text-center pt-1">{error}</p>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-text-secondary mb-1.5">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-base w-full"
-              placeholder="seu@email.com"
-              required
-            />
-          </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary w-full rounded-2xl py-3.5 text-sm font-semibold mt-1"
+        >
+          {loading ? 'Entrando…' : 'Entrar'}
+        </button>
 
-          <div>
-            <label className="block text-sm text-text-secondary mb-1.5">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-base w-full"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          {error && <p className="text-expense text-sm">{error}</p>}
-
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Entrando...' : 'Entrar'}
+        <p className="text-center pt-1">
+          <button
+            type="button"
+            className="text-sm text-text-muted hover:text-text-secondary transition-colors"
+          >
+            Esqueceu sua senha?
           </button>
-        </form>
-
-        <p className="text-center text-sm text-text-muted mt-6">
-          Não tem conta?{' '}
-          <Link to="/register" className="text-accent hover:text-accent-hover transition-colors">
-            Criar conta
-          </Link>
         </p>
-      </div>
+      </form>
+
+      <p className="text-center text-sm text-text-muted mt-8">
+        Não tem conta?{' '}
+        <Link
+          to="/register"
+          className="text-rubi hover:text-accent transition-colors font-medium"
+        >
+          Criar conta
+        </Link>
+      </p>
     </div>
   )
 }

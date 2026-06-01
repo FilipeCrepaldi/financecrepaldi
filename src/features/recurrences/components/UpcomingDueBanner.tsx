@@ -117,7 +117,7 @@ export function UpcomingDueBanner() {
             >
               <div
                 className="w-2 h-2 rounded-full shrink-0"
-                style={{ backgroundColor: r.category?.color ?? '#7c6af7' }}
+                style={{ backgroundColor: r.category?.color ?? '#7B1E3A' }}
               />
               <div className="flex-1 min-w-0">
                 <p className="text-text-primary text-sm truncate">{r.name}</p>

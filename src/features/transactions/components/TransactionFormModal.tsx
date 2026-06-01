@@ -516,7 +516,7 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
                               ? 'text-white border-transparent'
                               : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
                           )}
-                          style={selected ? { backgroundColor: c.color ?? '#7c6af7' } : undefined}
+                          style={selected ? { backgroundColor: c.color ?? '#7B1E3A' } : undefined}
                         >
                           <span>{c.name}</span>
                           {c.last_digits && (
@@ -607,7 +607,7 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
                           ? 'text-white border-transparent'
                           : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
                       )}
-                      style={selected ? { backgroundColor: a.color ?? '#7c6af7' } : undefined}
+                      style={selected ? { backgroundColor: a.color ?? '#7B1E3A' } : undefined}
                     >
                       {a.name}
                       {typeof a.balance === 'number' && (
@@ -667,7 +667,7 @@ export function TransactionFormModal({ transaction, onClose }: TransactionFormMo
                           ? 'border-transparent text-white font-medium'
                           : 'border-border text-text-secondary hover:text-text-primary hover:border-border-strong',
                       )}
-                      style={selected ? { backgroundColor: tg.color ?? '#7c6af7' } : undefined}
+                      style={selected ? { backgroundColor: tg.color ?? '#CDAA5E' } : undefined}
                     >
                       {tg.name}
                     </button>

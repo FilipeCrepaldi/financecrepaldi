@@ -1,10 +1,13 @@
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-8 h-8 border-2 border-border border-t-accent rounded-full animate-spin" />
-        <span className="text-text-muted text-sm">Carregando...</span>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-5">
+      <div className="relative">
+        <img src="/logo.png" alt="" className="w-14 h-14 object-contain opacity-90" />
+        <div className="absolute -inset-3 rounded-full border-2 border-border border-t-accent animate-spin" />
       </div>
+      <span className="text-text-muted text-xs uppercase tracking-widest">
+        Carregando…
+      </span>
     </div>
   )
 }

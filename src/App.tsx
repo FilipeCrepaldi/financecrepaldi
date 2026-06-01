@@ -2,12 +2,19 @@ import { useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore, useTransactionStore } from '@/store'
 
-// Componente raiz que inicializa o estado global
 export default function App() {
-  useAuth() // inicializa sessão e listener
+  useAuth()
 
   const { user } = useAuthStore()
   const { fetchCategories, fetchAliases, fetchTags } = useTransactionStore()
+
+  // Restaura o tema salvo (padrão: dark — já definido no index.html)
+  useEffect(() => {
+    const saved = localStorage.getItem('fm-theme')
+    if (saved === 'light' || saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', saved)
+    }
+  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -16,5 +23,5 @@ export default function App() {
     fetchTags(user.id)
   }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return null // renderização feita pelo RouterProvider no main.tsx
+  return null
 }

@@ -20,6 +20,9 @@ interface TransactionState {
   addTransaction: (t: Transaction) => void
   removeTransaction: (id: string) => void
   updateTransaction: (t: Transaction) => void
+  addCategory: (c: Category) => void
+  updateCategory: (c: Category) => void
+  removeCategory: (id: string) => void
 }
 
 const { month, year } = currentMonth()
@@ -77,5 +80,20 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       transactions: state.transactions.map((t) =>
         t.id === updated.id ? updated : t,
       ),
+    })),
+
+  addCategory: (c) =>
+    set((state) => ({
+      categories: [...state.categories, c].sort((a, b) => a.name.localeCompare(b.name)),
+    })),
+
+  updateCategory: (updated) =>
+    set((state) => ({
+      categories: state.categories.map((c) => (c.id === updated.id ? updated : c)),
+    })),
+
+  removeCategory: (id) =>
+    set((state) => ({
+      categories: state.categories.filter((c) => c.id !== id),
     })),
 }))

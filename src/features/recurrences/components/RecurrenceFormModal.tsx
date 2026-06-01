@@ -301,7 +301,7 @@ export function RecurrenceFormModal({
                           ? 'text-white border-transparent'
                           : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
                       )}
-                      style={selected ? { backgroundColor: a.color ?? '#7c6af7' } : undefined}
+                      style={selected ? { backgroundColor: a.color ?? '#7B1E3A' } : undefined}
                     >
                       {a.name}
                       {typeof a.balance === 'number' && (

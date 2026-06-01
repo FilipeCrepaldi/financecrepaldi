@@ -169,7 +169,7 @@ export function MerchantCombobox({
                 <span
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{
-                    backgroundColor: m.color ?? m.category?.color ?? '#7c6af7',
+                    backgroundColor: m.color ?? m.category?.color ?? '#7B1E3A',
                   }}
                 />
                 <div className="flex-1 min-w-0">

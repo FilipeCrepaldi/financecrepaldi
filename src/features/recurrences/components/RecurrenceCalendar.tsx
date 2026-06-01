@@ -166,7 +166,7 @@ export function RecurrenceCalendar({ recurrences }: RecurrenceCalendarProps) {
                       key={idx}
                       className="w-1 h-1 rounded-full"
                       style={{
-                        backgroundColor: r.category?.color ?? '#7c6af7',
+                        backgroundColor: r.category?.color ?? '#7B1E3A',
                       }}
                     />
                   ))}

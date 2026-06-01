@@ -2,7 +2,7 @@
 
 > "O extrato bancário é quase um diário psicológico automático."
 
-**Última atualização:** 2026-05-20 (substitui versões anteriores em `finance-mirror-docs (1).md` e [aditivo-merchants-e-cartoes.md](./aditivo-merchants-e-cartoes.md))
+**Última atualização:** 2026-05-31
 
 ---
 
@@ -111,7 +111,7 @@ Extensão de `auth.users`. Criada via trigger `on_auth_user_created` ao registra
 | currency | text | Default `BRL` |
 
 #### `categories`
-`user_id = null` → categoria global. 12 globais pré-criadas.
+`user_id = null` → categoria global. 12 globais pré-criadas. Usuários podem criar categorias próprias.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
@@ -134,7 +134,7 @@ N:N entre `transactions` e `tags`.
 #### `merchant_aliases`
 Patterns para auto-categorização no quick entry (`pattern`, `merchant_name`, `category_id`, `is_global`). 18 aliases globais pré-configurados (iFood, Uber, Netflix, etc).
 
-#### `merchants` *(novo — migração 003)*
+#### `merchants` *(migração 003)*
 Estabelecimentos como entidade própria.
 
 | Campo | Tipo | Descrição |
@@ -149,6 +149,22 @@ Estabelecimentos como entidade própria.
 
 Unique constraint `(user_id, lower(name))`.
 
+#### `accounts` *(migração 007)*
+Contas financeiras do usuário (corrente, poupança, carteira, investimento).
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid | |
+| name | text | "Nubank", "Carteira", "C6" |
+| kind | text | `checking` / `savings` / `cash` / `investment` |
+| initial_balance | numeric | Saldo inicial (histórico) |
+| color | text | |
+| icon | text | |
+| is_active | boolean | |
+
+Saldo calculado em runtime: `initial_balance + Σ(income) - Σ(expense)` das transações vinculadas via `account_id`.
+
 #### `transactions`
 
 | Campo | Tipo | Descrição |
@@ -162,17 +178,17 @@ Unique constraint `(user_id, lower(name))`.
 | merchant_id | uuid | FK merchants |
 | category_id | uuid | FK categories |
 | recurrence_id | uuid | FK recurrences (se gerada por uma) |
+| account_id | uuid | FK accounts. null = sem conta vinculada |
 | card_id | uuid | FK credit_cards. **null = pago em caixa** |
 | invoice_id | uuid | FK card_invoices |
-| installment_total | int | Total de parcelas (1 = à vista) |
+| transfer_pair_id | uuid | Agrupa o par de transações de uma transferência |
+| installment_total | int | Total de parcelas (null = à vista) |
 | installment_number | int | Número desta parcela (ex: 3) |
 | installment_group_id | uuid | Agrupa as N parcelas da mesma compra |
 | date | date | |
 | is_confirmed | boolean | |
 
 #### `recurrences`
-
-Mesmas colunas anteriores **+** `merchant_id`, `card_id`, `installment_total`.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
@@ -182,7 +198,9 @@ Mesmas colunas anteriores **+** `merchant_id`, `card_id`, `installment_total`.
 | frequency | text | `daily` / `weekly` / `monthly` / `yearly` |
 | next_due_date | date | |
 | category_id | uuid | |
+| account_id | uuid | FK accounts |
 | card_id | uuid | Se recorrência paga via cartão |
+| installment_total | int | |
 | is_active | boolean | |
 
 **Tipo é inferido da categoria:** `category.type === 'income'` → receita; senão → despesa.
@@ -190,7 +208,7 @@ Mesmas colunas anteriores **+** `merchant_id`, `card_id`, `installment_total`.
 #### `budgets`
 Limite mensal por categoria (`amount`, `month`, `year`).
 
-#### `credit_cards` *(novo — migração 004)*
+#### `credit_cards` *(migração 004)*
 
 | Campo | Tipo | Descrição |
 |---|---|---|
@@ -198,13 +216,13 @@ Limite mensal por categoria (`amount`, `month`, `year`).
 | last_digits | text | 4 dígitos |
 | color | text | |
 | limit_amount | numeric | `limit` é palavra reservada em SQL |
-| closing_day | int (nullable) | Dia padrão de fechamento — null permitido para cartões com fechamento variável |
+| closing_day | int (nullable) | Dia padrão de fechamento — null para fechamento variável |
 | due_day | int | Dia de vencimento |
 | owner_type | text | `self` / `third_party` |
 | owner_name | text | Nome do dono se third_party |
 | is_active | boolean | |
 
-#### `card_invoices` *(novo — migração 005)*
+#### `card_invoices` *(migração 005)*
 Faturas de cartão. Geradas automaticamente quando uma compra cai em mês ainda sem fatura.
 
 | Campo | Tipo | Descrição |
@@ -218,7 +236,7 @@ Faturas de cartão. Geradas automaticamente quando uma compra cai em mês ainda 
 
 Unique `(card_id, reference_month)`.
 
-#### `card_invoice_payments` *(novo — migração 005)*
+#### `card_invoice_payments` *(migração 005)*
 Pagamentos da fatura. Suporta split (paga em 2x sem juros).
 
 | Campo | Tipo | Descrição |
@@ -226,7 +244,7 @@ Pagamentos da fatura. Suporta split (paga em 2x sem juros).
 | invoice_id | uuid | |
 | amount | numeric | >0 |
 | paid_at | date | |
-| transaction_id | uuid | FK transactions (saída de caixa correspondente — nullable para `third_party` sem reembolso) |
+| transaction_id | uuid | FK transactions (saída de caixa — nullable para `third_party` sem reembolso) |
 
 Fatura fica `paid` quando `sum(payments.amount) >= total`.
 
@@ -235,7 +253,7 @@ Alertas/insights comportamentais. Dedup via unique `(user_id, fingerprint)`.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| type | text | `budget_overrun` / `spike` / `recurrence_missed` / `streak` |
+| type | text | `budget_overrun` / `spike` / `recurrence_missed` / `streak` / `card_limit` / `card_commitment` / `card_third_party` / `invoice_due` |
 | severity | text | `info` / `warning` / `critical` / `success` |
 | title, body | text | |
 | meta | jsonb | Dados estruturados |
@@ -249,7 +267,7 @@ Todas as tabelas têm Row Level Security ativado. Cada user acessa apenas seus p
 ### Triggers
 
 - `on_auth_user_created` → cria profile automaticamente ao registrar
-- `set_updated_at` → atualiza `updated_at` em profiles, recurrences, transactions, budgets, merchants, credit_cards, card_invoices
+- `set_updated_at` → atualiza `updated_at` em profiles, recurrences, transactions, budgets, merchants, credit_cards, card_invoices, accounts
 
 ---
 
@@ -261,13 +279,13 @@ Todas as tabelas têm Row Level Security ativado. Cada user acessa apenas seus p
 src/
 ├── features/
 │   ├── dashboard/components/
-│   │   └── DashboardPage.tsx                   # Saldo, receita, despesa, compromisso
+│   │   └── DashboardPage.tsx                   # Saldo, receita, despesa, blocos integrados
 │   ├── transactions/components/
 │   │   ├── TransactionsPage.tsx                # Lista + filtros + paginação
 │   │   ├── TransactionFilters.tsx
 │   │   ├── TransactionList.tsx
 │   │   ├── TransactionRow.tsx
-│   │   └── TransactionFormModal.tsx            # CRUD + toggle Caixa/Cartão + merchant combobox
+│   │   └── TransactionFormModal.tsx            # CRUD + toggle Caixa/Cartão/Conta + parcelamento
 │   ├── budgets/components/
 │   │   ├── BudgetsPage.tsx
 │   │   ├── BudgetCard.tsx
@@ -279,7 +297,7 @@ src/
 │   │   ├── RecurrenceCalendar.tsx              # Mini calendário com dots
 │   │   └── UpcomingDueBanner.tsx               # Banner no Dashboard com próximos 3 dias
 │   ├── analytics/components/
-│   │   ├── AnalyticsPage.tsx
+│   │   ├── AnalyticsPage.tsx                   # Filtro por fonte: todos / caixa / cartão específico
 │   │   ├── PeriodSelector.tsx                  # 1m / 3m / 6m / 1a
 │   │   ├── StabilityScoreCard.tsx
 │   │   ├── CategoryPie.tsx                     # Donut top 8 + Outras
@@ -293,9 +311,17 @@ src/
 │   ├── merchants/components/
 │   │   ├── MerchantsPage.tsx                   # Lista + busca + mesclar duplicatas
 │   │   └── MerchantEditModal.tsx
+│   ├── categories/components/
+│   │   └── CategoriesPage.tsx                  # CRUD de categorias customizadas
+│   ├── accounts/components/
+│   │   ├── AccountsPage.tsx                    # Lista contas + saldo + transferência
+│   │   ├── AccountsBlock.tsx                   # Bloco no Dashboard
+│   │   ├── AccountEditModal.tsx                # CRUD de conta
+│   │   └── TransferModal.tsx                   # Transferência entre contas
 │   ├── cards/components/
 │   │   ├── CardsPage.tsx                       # Lista expansível: cartão → faturas → detalhes
 │   │   ├── CardsBlock.tsx                      # Bloco do Dashboard com cada cartão
+│   │   ├── FutureCommitments.tsx               # Bloco do Dashboard — parcelas 12 meses
 │   │   ├── CardEditModal.tsx
 │   │   └── PaymentModal.tsx                    # Pagamento parcial + reembolso terceiro
 │   └── auth/components/
@@ -303,7 +329,7 @@ src/
 │       └── RegisterPage.tsx
 ├── components/
 │   ├── shared/
-│   │   ├── AppLayout.tsx                       # Sidebar + topbar
+│   │   ├── AppLayout.tsx                       # Sidebar + topbar + atalhos K/N
 │   │   ├── LoadingScreen.tsx
 │   │   ├── MonthSelector.tsx
 │   │   ├── QuickEntryBar.tsx                   # Modal "Lançar"
@@ -314,14 +340,15 @@ src/
 │   └── useQuickEntry.ts
 ├── services/                                   # Comunicação com Supabase
 │   ├── supabase.ts                             # Client singleton
-│   ├── transactions.ts                         # CRUD + getSummary (ignora card_id)
-│   ├── categories.ts
+│   ├── transactions.ts                         # CRUD + getSummary + createWithInstallments
+│   ├── categories.ts                           # CRUD (inclui customizadas)
 │   ├── tags.ts
 │   ├── budgets.ts
 │   ├── recurrences.ts                          # CRUD + markAsPaid + detectSimilar
 │   ├── merchants.ts                            # CRUD + merge + findByName
 │   ├── cards.ts                                # CRUD + getOrCreateInvoiceForDate + registerPayment
-│   ├── insights.ts                             # list + generate + 4 regras de detecção
+│   ├── accounts.ts                             # CRUD + transfer + listWithBalances + moveAllFrom
+│   ├── insights.ts                             # list + generate + 8 regras de detecção
 │   └── index.ts
 ├── store/                                      # Zustand
 │   ├── auth.ts
@@ -330,6 +357,7 @@ src/
 │   ├── recurrences.ts
 │   ├── merchants.ts
 │   ├── cards.ts                                # cards + invoicesByCard
+│   ├── accounts.ts                             # accounts + defaultAccountId
 │   ├── insights.ts
 │   └── index.ts
 ├── router/
@@ -337,7 +365,7 @@ src/
 ├── types/
 │   ├── app.ts                                  # Todos os tipos de domínio
 │   └── index.ts
-├── utils/                                      # format, parser, todayISO, parseAmount, etc
+├── utils/                                      # format, parser, todayISO, parseAmount, addMonthsISO, etc
 └── lib/utils.ts                                # cn() helper Tailwind
 ```
 
@@ -355,6 +383,8 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 | `/insights` | InsightsPage | ✅ |
 | `/merchants` | MerchantsPage | ✅ |
 | `/cards` | CardsPage | ✅ |
+| `/accounts` | AccountsPage | ✅ |
+| `/categories` | CategoriesPage | ✅ |
 | `/login`, `/register` | rotas públicas | ✅ |
 
 ### Stores (Zustand)
@@ -362,11 +392,12 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 | Store | Estado |
 |---|---|
 | `useAuthStore` | user, session, profile, signIn/signUp/signOut, fetchProfile |
-| `useTransactionStore` | transactions, categories, aliases, tags, selectedMonth/Year, CRUD local |
+| `useTransactionStore` | transactions, categories, aliases, tags, selectedMonth/Year, CRUD local + addCategory/updateCategory/removeCategory |
 | `useBudgetsStore` | budgets, fetchBudgets, CRUD local |
 | `useRecurrencesStore` | recurrences, showInactive, CRUD local |
 | `useMerchantsStore` | merchants, fetchMerchants, addMerchant/updateMerchant/applyMerge |
 | `useCardsStore` | cards, invoicesByCard, fetchCards/fetchInvoices, upsertInvoice |
+| `useAccountsStore` | accounts, defaultAccountId, fetchAccounts, refreshBalances, CRUD local, setDefaultAccount |
 | `useInsightsStore` | insights, fetchInsights, generateInsights, markRead, dismiss |
 
 ---
@@ -385,16 +416,17 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 - Rotas protegidas com redirect automático
 - Profile carregado após login
 
-### ✅ Layout
+### ✅ Layout + Atalhos de teclado
 - Sidebar responsiva, topbar com botão "Lançar"
 - Lazy loading de páginas
 - Tema dark com design tokens customizados
+- **Atalhos:** `K` → Quick Entry, `N` → Nova transação (ignorados dentro de inputs; visíveis na topbar)
 
 ### ✅ Dashboard
 - Cards de resumo: saldo, receitas, despesas, % comprometido
 - **Compras no cartão NÃO somam no saldo** — aparecem em "Compromissos cartão"
 - Lista de transações recentes
-- Blocos integrados: `UpcomingDueBanner`, `InsightsBlock`, `CardsBlock`
+- Blocos integrados (em ordem): `UpcomingDueBanner`, `InsightsBlock`, `AccountsBlock`, `CardsBlock`, `FutureCommitments`
 
 ### ✅ Quick Entry
 - Parser de texto natural: `"32 ifood almoço"` → valor + merchant + descrição
@@ -408,6 +440,7 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 - Tags comportamentais (adicionar/remover, sincroniza N:N)
 - Toggle visual **Caixa / Cartão** (só para despesas)
 - Selector de cartão com cor + dígitos + chip "3º" para terceiros
+- Selector de conta (receitas e despesas sem cartão)
 - Alocação automática em fatura ao salvar compra de cartão
 
 ### ✅ Orçamentos (Fase 3)
@@ -426,6 +459,7 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 - Banner no Dashboard com vencimentos dos próximos 3 dias (botões "Pagar" / "Receber")
 
 ### ✅ Analytics (Fase 5)
+- **Filtro de fonte:** Todos / Só caixa / cartão específico (filtra todos os gráficos)
 - Period selector: 1m / 3m / 6m / 1a
 - Gráfico de pizza: gastos por categoria (top 8 + "Outras")
 - Linha temporal: receita/despesa/saldo por mês
@@ -437,11 +471,15 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 - Bloco no Dashboard (top 3 por severidade) + página dedicada
 - Persistidos no banco com `mark as read` e `dismiss`
 - Geração automática no login após `fetchInsights`
-- 4 regras de detecção:
+- 8 regras de detecção:
   - **budget_overrun:** 80% warning, 100% critical
   - **spike:** despesa 1.5× acima da média 3M, base ≥ R$50
   - **recurrence_missed:** vencimento ≥ 7 dias atrás
   - **streak:** dias consecutivos sem tag "impulso" (milestones 7/14/30)
+  - **card_limit:** limite usado ≥ 80% (warning) / ≥ 100% (critical)
+  - **card_commitment:** parcelas a vencer em 6 meses ≥ R$500
+  - **card_third_party:** uso do mês em cartão emprestado
+  - **invoice_due:** fatura vencendo em ≤ 3 dias com saldo a pagar
 - Badge de não lidos no nav lateral
 - Dedup via fingerprint único `(user_id, fingerprint)`
 
@@ -450,22 +488,40 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 - Combobox no form de transação e recorrência: busca + "+ Cadastrar" inline
 - Página `/merchants` com lista, busca, edição inline
 - **Mesclar duplicatas:** seleciona 2+ → escolhe destino → unifica (transfere transactions/recurrences vinculadas + atualiza merchant_name)
-- Seed automático na migração: cria merchants a partir dos `merchant_name` distintos existentes, com categoria sugerida pela mais frequente
+- Seed automático na migração: cria merchants a partir dos `merchant_name` distintos existentes
 
-### ✅ Cartões de crédito (Aditivo PR 2 — base)
+### ✅ Cartões de crédito (Aditivo PR 2 + PR 3 — completo)
 - Tabela `credit_cards` (limite, fechamento, vencimento, owner_type)
 - Tabela `card_invoices` (uma por mês de referência, status open/closed/paid)
 - Tabela `card_invoice_payments` (suporta split — paga R$X dia 20 + R$Y dia 5)
 - Compra em data D atribuída automaticamente à fatura cujo `closing_date >= D`
 - **Fechamento variável:** `closing_day` nullable no cartão; cada fatura tem `closing_date` própria editável
-- **Cartão de terceiro:** `owner_type='third_party'` + `owner_name`. Compras contam no Analytics, mas pagamento da fatura tem checkbox "Reembolsar [nome]" que controla se gera saída de caixa
+- **Cartão de terceiro:** `owner_type='third_party'` + `owner_name`. Compras contam no Analytics, mas pagamento tem checkbox "Reembolsar [nome]"
 - Compras com `card_id != null` **não somam no saldo do mês** — aparecem em `cardCommitted`
-- Página `/cards` expansível: cartão → faturas (abertas/fechadas/pagas) → compras + pagamentos
-- `PaymentModal`: registra pagamento total ou parcial; gera transação de despesa linkada via `transaction_id`
+- Página `/cards` expansível: cartão → faturas → compras com indicador parcela (`3/12`) + pagamentos
+- `PaymentModal`: registra pagamento total ou parcial; gera transação de despesa linkada
+- **Parcelamento:** campo "Parcelar em N×" no form (preset 1/2/3/4/6/10/12 + custom até 36); gera N transações com `installment_group_id`, cada uma na fatura do mês correto. Última parcela absorve arredondamento
+- **Bloco "Compromissos futuros"** no Dashboard: agrupa faturas não pagas dos próximos 12 meses por mês, mostra valor remanescente
 - Bloco no Dashboard com cada cartão: fatura aberta, restante a pagar, % do limite
 
+### ✅ Contas financeiras
+- Tabela `accounts` com kind (checking/savings/cash/investment), initial_balance, color, icon
+- Saldo calculado em runtime: `initial_balance + Σ receitas - Σ despesas` vinculadas
+- CRUD completo via `/accounts` com modal de criação/edição
+- **Transferência entre contas:** `TransferModal` cria par de transações com mesmo `transfer_pair_id` (os pares são ignorados nos cálculos de receita/despesa do mês)
+- `moveAllFrom()` — migra todas as transações/recorrências de uma conta para outra
+- Selector de conta no formulário de transação (receitas e despesas sem cartão)
+- Conta padrão persistida no localStorage
+- **Bloco no Dashboard** (`AccountsBlock`): grid com cada conta ativa, saldo total, botão de transferência
+
+### ✅ Categorias customizadas
+- Usuários podem criar categorias próprias com nome, emoji, tipo e cor
+- Página `/categories` com seções separadas: "Minhas categorias" (CRUD inline) + "Categorias padrão" (somente leitura)
+- Edição e exclusão com confirmação (protege contra FK de transações vinculadas)
+- Categorias criadas aparecem automaticamente nos dropdowns de todos os formulários
+
 ### ✅ Tipagem
-- Todos os tipos em [src/types/app.ts](../finance-mirror/src/types/app.ts)
+- Todos os tipos em `src/types/app.ts`
 - Tipos de formulários, async state, dashboard summary
 - Zero erros de TypeScript
 
@@ -473,17 +529,18 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 
 ## Migrations
 
-Em [supabase/migrations/](../finance-mirror/supabase/migrations/), aplicar na ordem no SQL Editor (todas idempotentes):
+Em `supabase/migrations/`, aplicar na ordem no SQL Editor (todas idempotentes):
 
 | # | Arquivo | O que faz |
 |---|---|---|
 | 0 | (schema inicial) | profiles, categories, transactions, recurrences, budgets, tags, merchant_aliases — aplicado manualmente |
 | 001 | `001_global_tags.sql` | Seed das 5 tags globais comportamentais |
 | 002 | `002_insights.sql` | Tabela `insights` + RLS + fingerprint único |
-| 003 | `003_merchants.sql` | Tabela `merchants` + FK `merchant_id` em transactions/recurrences + **seed automático** dos merchant_names existentes |
+| 003 | `003_merchants.sql` | Tabela `merchants` + FK `merchant_id` em transactions/recurrences + seed automático |
 | 004 | `004_credit_cards.sql` | Tabela `credit_cards` + RLS + constraints |
 | 005 | `005_card_invoices.sql` | Tabelas `card_invoices` e `card_invoice_payments` + RLS via ownership |
 | 006 | `006_transactions_card_cols.sql` | Adiciona `card_id`, `invoice_id`, `installment_*` em transactions; `card_id` + `installment_total` em recurrences |
+| 007 | `007_accounts.sql` | Tabela `accounts` + FK `account_id` em transactions/recurrences + `transfer_pair_id` em transactions + RLS |
 
 ---
 
@@ -496,7 +553,7 @@ Usuário acessa URL
   → AuthProvider em main.tsx inicializa Supabase
   → supabase.auth.getSession()
   → Se sessão: fetchProfile + fetchCategories + fetchAliases + fetchTags
-              + fetchRecurrences + fetchMerchants + fetchCards
+              + fetchRecurrences + fetchMerchants + fetchCards + fetchAccounts
               + fetchInsights → generateInsights (background)
   → Sem sessão: redireciona /login
 ```
@@ -514,23 +571,45 @@ Usuário acessa URL
   → modal fecha
 ```
 
-### Lançar compra no cartão
+### Lançar compra no cartão (à vista)
+
+```
+Form de transação (ou atalho N)
+  → Tipo: Despesa → Toggle "Pago com" = Cartão → Selecionar cartão
+  → Parcelar em: À vista (1×)
+  → handleSubmit:
+      cardsService.getOrCreateInvoiceForDate(card, date)
+      transactionsService.create(payload, { invoice_id })
+      cardsService.recalculateTotal(invoice_id)
+  → Saldo do mês NÃO muda — aparece em cardCommitted
+```
+
+### Lançar compra parcelada
 
 ```
 Form de transação
-  → Tipo: Despesa
-  → Toggle "Pago com" = Cartão
-  → Selecionar cartão (ex: Roxinho)
-  → Preencher valor, merchant, categoria, data
-  → handleSubmit:
-      cardsService.getOrCreateInvoiceForDate(card, date)
-        → calcula closing_date e due_date
-        → procura invoice existente para mesmo reference_month
-        → se não, cria nova com status='open'
-      transactionsService.create(payload, { invoice_id })
-      cardsService.recalculateTotal(invoice_id)
-  → Saldo do mês NÃO muda (transação tem card_id)
-  → CardsBlock no Dashboard mostra fatura crescendo
+  → Tipo: Despesa → Cartão → Parcelar em: 6×
+  → handleSubmit detecta installment_total > 1:
+      transactionsService.createWithInstallments(userId, payload, card)
+        → para k=1..6:
+            date_k = data + (k-1) meses
+            invoice_k = getOrCreateInvoiceForDate(card, date_k)
+            insere transaction com installment_number=k, installment_group_id=uuid
+        → última parcela absorve resíduo de arredondamento
+        → recalculate total de cada fatura afetada
+  → 6 transações criadas, cada uma na fatura do mês correspondente
+```
+
+### Transferência entre contas
+
+```
+/accounts → "Transferir" (botão, disponível quando ≥2 contas ativas)
+  → TransferModal: conta origem, conta destino, valor, data
+  → accountsService.transfer():
+      cria transaction (expense + account_id=from + transfer_pair_id=uuid)
+      cria transaction (income  + account_id=to   + transfer_pair_id=uuid)
+  → getSummary ignora transactions com transfer_pair_id
+  → Saldo de cada conta atualiza; saldo total do mês não muda
 ```
 
 ### Pagar fatura (cartão próprio)
@@ -551,18 +630,8 @@ Form de transação
 /cards → cartão Pai → fatura → "Registrar pagamento"
   → PaymentModal mostra checkbox "Reembolsar [Pai]"
   → Se marcado: gera transação "Reembolso fatura Cartão Pai (Leonis)" — sai do caixa
-  → Se desmarcado: registra payment sem mexer no caixa (você não paga, ele paga)
+  → Se desmarcado: registra payment sem mexer no caixa (ele paga, você só registra)
   → Fatura quita normalmente quando sum(payments) >= total
-```
-
-### Pagamento parcial (em 2 partes)
-
-```
-Cenário: fatura R$1800, paga R$900 dia 20 + R$900 dia 5
-  → 1º pagamento (dia 20): registerPayment R$900
-      payments = [900], status='closed' (parcial)
-  → 2º pagamento (dia 5): registerPayment R$900
-      payments = [900, 900], sum=1800=total → status='paid'
 ```
 
 ### Deploy
@@ -579,21 +648,8 @@ git add . && git commit && git push
 
 ## O que falta
 
-### 🟡 PR 3 — Cartões avançado (próximo)
+### 🟡 Funcionalidades avançadas
 
-- **Parcelamento:** campo "Parcelar em N×" no form; geração de N transações com `installment_group_id`, cada uma na fatura do mês correspondente
-- Indicador "3/12" na lista de compras da fatura
-- Bloco "Compromissos futuros" no Dashboard (total de parcelas a vencer nos próximos 12 meses)
-- Insights novos:
-  - "Limite do [cartão] em 80%"
-  - "Você comprometeu R$X em parcelas nos próximos 6 meses"
-  - "Uso do cartão do Pai este mês: R$X"
-  - "Fatura do [cartão] vence em 3 dias, R$X restante"
-- Filtro por cartão no Analytics
-
-### 🟡 Fase 7 — Funcionalidades avançadas
-
-- **Categorias customizadas** (hoje só globais — 13 transações ficaram em "Outros" por falta de categoria)
 - **Importador CSV** de extratos bancários
 - **OCR** de comprovantes
 - **Open Finance** (integração bancária)
@@ -608,7 +664,6 @@ git add . && git commit && git push
 - Testes unitários (utils, parser, serviços)
 - Realtime (atualização automática ao adicionar transação em outra aba)
 - PWA (instalar como app no celular)
-- Keyboard shortcuts (`K` quick entry, `N` nova transação)
 - Offline support
 
 ---
@@ -678,4 +733,4 @@ Migrations não rodam automaticamente no deploy do frontend. Antes de fazer push
 
 ---
 
-*Documentação consolidada em 2026-05-20. Atualizar conforme o PR 3 e fases futuras forem entregues.*
+*Documentação atualizada em 2026-05-31.*

@@ -42,7 +42,7 @@ export function TransactionRow({ transaction: t, onDelete, onEdit }: Transaction
       {/* Indicador de cor da categoria */}
       <div
         className="w-1 h-8 rounded-full shrink-0"
-        style={{ backgroundColor: t.category?.color ?? '#2a2a38' }}
+        style={{ backgroundColor: t.category?.color ?? '#3A2A30' }}
       />
 
       {/* Conteúdo principal */}
@@ -71,8 +71,8 @@ export function TransactionRow({ transaction: t, onDelete, onEdit }: Transaction
               key={tag.id}
               className="text-[10px] px-1.5 py-0 rounded-full font-medium"
               style={{
-                backgroundColor: `${tag.color ?? '#7c6af7'}22`,
-                color: tag.color ?? '#7c6af7',
+                backgroundColor: `${tag.color ?? '#CDAA5E'}22`,
+                color: tag.color ?? '#CDAA5E',
               }}
             >
               {tag.name}

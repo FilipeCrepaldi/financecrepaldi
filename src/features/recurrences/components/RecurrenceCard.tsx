@@ -97,7 +97,7 @@ export function RecurrenceCard({
             <p className="text-text-muted text-xs truncate flex items-center gap-1.5">
               <span
                 className="w-1.5 h-1.5 rounded-full inline-block"
-                style={{ backgroundColor: recurrence.category?.color ?? '#7c6af7' }}
+                style={{ backgroundColor: recurrence.category?.color ?? '#7B1E3A' }}
               />
               {recurrence.category?.name ?? 'Sem categoria'} ·{' '}
               {FREQUENCY_LABEL[recurrence.frequency]}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -14,10 +14,15 @@ import {
   Store,
   CreditCard,
   Wallet,
+  Tags,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { useAuthStore, useInsightsStore } from '@/store'
+import { useTheme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
 import { QuickEntryBar } from './QuickEntryBar'
+import { TransactionFormModal } from '@/features/transactions/components/TransactionFormModal'
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true },
@@ -27,6 +32,7 @@ const NAV_ITEMS = [
   { to: '/accounts', icon: Wallet, label: 'Contas' },
   { to: '/cards', icon: CreditCard, label: 'Cartões' },
   { to: '/merchants', icon: Store, label: 'Estabelecimentos' },
+  { to: '/categories', icon: Tags, label: 'Categorias' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/insights', icon: Sparkles, label: 'Insights', badgeKey: 'insights' as const },
 ]
@@ -38,10 +44,29 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [quickEntryOpen, setQuickEntryOpen] = useState(false)
+  const [newTransactionOpen, setNewTransactionOpen] = useState(false)
   const { signOut, profile } = useAuthStore()
   const insights = useInsightsStore((s) => s.insights)
   const unreadCount = insights.filter((i) => !i.is_read).length
   const navigate = useNavigate()
+  const { theme, toggle: toggleTheme } = useTheme()
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'k' || e.key === 'K') {
+        e.preventDefault()
+        setQuickEntryOpen(true)
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault()
+        setNewTransactionOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   const handleSignOut = async () => {
     await signOut()
@@ -58,35 +83,40 @@ export function AppLayout({ children }: AppLayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — sempre dark, independente do tema da página */}
       <aside
+        data-theme="dark"
         className={cn(
-          'fixed top-0 left-0 h-full w-60 bg-background-secondary border-r border-border z-30',
+          'fixed top-0 left-0 h-full w-60 z-30',
           'flex flex-col transition-transform duration-200',
+          'bg-background-secondary border-r border-border',
+          'shadow-lg',
           'lg:translate-x-0 lg:static lg:z-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         {/* Logo */}
-        <div className="p-5 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-accent rounded-lg flex items-center justify-center">
-              <Zap size={14} className="text-white" />
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-accent rounded-lg flex items-center justify-center shadow-glow-wine">
+              <Zap size={13} className="text-white" strokeWidth={2.5} />
             </div>
-            <span className="font-semibold text-text-primary tracking-tight">
-              Finance Mirror
-            </span>
+            <div className="leading-tight">
+              <span className="font-semibold text-text-primary text-sm tracking-tight">
+                finance<span className="text-rubi">-</span>mirror
+              </span>
+            </div>
           </div>
           <button
-            className="lg:hidden btn-ghost p-1"
+            className="lg:hidden p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-background-tertiary transition-colors"
             onClick={() => setSidebarOpen(false)}
           >
-            <X size={16} />
+            <X size={15} />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-0.5">
+        <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto">
           {NAV_ITEMS.map(({ to, icon: Icon, label, exact, badgeKey }) => {
             const badge = badgeKey === 'insights' ? unreadCount : 0
             return (
@@ -99,15 +129,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                   cn(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
                     isActive
-                      ? 'bg-accent/15 text-accent font-medium'
+                      ? 'bg-accent/20 text-white font-medium'
                       : 'text-text-secondary hover:text-text-primary hover:bg-background-tertiary',
                   )
                 }
               >
-                <Icon size={16} />
+                <Icon size={15} strokeWidth={2} />
                 <span className="flex-1">{label}</span>
                 {badge > 0 && (
-                  <span className="text-[10px] font-mono font-semibold bg-accent text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  <span className="text-[10px] font-mono font-semibold bg-accent text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
                     {badge}
                   </span>
                 )}
@@ -117,13 +147,13 @@ export function AppLayout({ children }: AppLayoutProps) {
         </nav>
 
         {/* User */}
-        <div className="p-3 border-t border-border">
-          <div className="flex items-center gap-3 px-3 py-2 mb-1">
-            <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-medium">
+        <div className="p-2.5 border-t border-border">
+          <div className="flex items-center gap-3 px-3 py-2 mb-0.5 rounded-lg">
+            <div className="w-7 h-7 rounded-full bg-accent/25 flex items-center justify-center text-accent text-xs font-semibold shrink-0">
               {profile?.full_name?.charAt(0).toUpperCase() ?? '?'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-text-primary truncate">
+              <p className="text-sm text-text-primary truncate font-medium">
                 {profile?.full_name ?? 'Usuário'}
               </p>
               <p className="text-xs text-text-muted truncate">{profile?.email}</p>
@@ -131,9 +161,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-secondary hover:text-expense hover:bg-expense/10 rounded-lg transition-colors duration-150"
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-muted hover:text-expense hover:bg-expense/10 rounded-lg transition-colors duration-150"
           >
-            <LogOut size={15} />
+            <LogOut size={14} />
             Sair
           </button>
         </div>
@@ -142,15 +172,24 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3">
           <button
-            className="lg:hidden btn-ghost p-2"
+            className="lg:hidden p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-tertiary transition-colors"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu size={18} />
           </button>
 
           <div className="flex-1" />
+
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-background-tertiary transition-colors duration-150"
+            title={theme === 'dark' ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
 
           {/* Quick entry trigger */}
           <button
@@ -161,6 +200,16 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="hidden sm:inline">Lançar</span>
             <kbd className="hidden sm:inline text-xs opacity-60 font-mono bg-white/10 px-1 rounded">
               K
+            </kbd>
+          </button>
+          <button
+            onClick={() => setNewTransactionOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 btn-ghost text-sm py-1.5 text-text-secondary"
+            title="Nova transação (N)"
+          >
+            <ArrowLeftRight size={14} />
+            <kbd className="text-xs opacity-60 font-mono bg-background-tertiary px-1 rounded border border-border">
+              N
             </kbd>
           </button>
         </header>
@@ -174,6 +223,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Quick Entry Modal */}
       {quickEntryOpen && (
         <QuickEntryBar onClose={() => setQuickEntryOpen(false)} />
+      )}
+
+      {/* Nova transação (shortcut N) */}
+      {newTransactionOpen && (
+        <TransactionFormModal
+          transaction={null}
+          onClose={() => setNewTransactionOpen(false)}
+        />
       )}
     </div>
   )

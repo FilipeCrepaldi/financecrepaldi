@@ -143,7 +143,7 @@ export default function AccountsPage() {
                 <div className="flex items-start gap-3 mb-3">
                   <div
                     className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-white"
-                    style={{ backgroundColor: a.color ?? '#7c6af7' }}
+                    style={{ backgroundColor: a.color ?? '#7B1E3A' }}
                   >
                     <Icon size={16} />
                   </div>
