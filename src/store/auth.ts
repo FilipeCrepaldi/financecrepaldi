@@ -16,7 +16,7 @@ interface AuthState {
   setInitialized: () => void
 
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, fullName: string) => Promise<void>
+  signUp: (email: string, password: string, fullName: string) => Promise<{ needsConfirmation: boolean }>
   signOut: () => Promise<void>
   fetchProfile: (userId: string) => Promise<void>
 }
@@ -50,12 +50,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (email, password, fullName) => {
     set({ loading: true })
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } },
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: window.location.origin,
+        },
       })
       if (error) throw error
+      // session != null → confirmação de e-mail desativada no Supabase, usuário já logado
+      // session == null → e-mail de confirmação foi enviado, precisa confirmar antes de entrar
+      return { needsConfirmation: !data.session }
     } finally {
       set({ loading: false })
     }

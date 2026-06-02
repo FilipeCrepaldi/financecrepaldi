@@ -16,7 +16,14 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao entrar')
+      const msg = err instanceof Error ? err.message : 'Erro ao entrar'
+      if (msg.toLowerCase().includes('email not confirmed')) {
+        setError('E-mail ainda não confirmado. Verifique sua caixa de entrada (e o spam) e clique no link de confirmação antes de entrar.')
+      } else if (msg.toLowerCase().includes('invalid login credentials')) {
+        setError('E-mail ou senha incorretos.')
+      } else {
+        setError(msg)
+      }
     }
   }
 

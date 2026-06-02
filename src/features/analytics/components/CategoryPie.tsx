@@ -57,11 +57,13 @@ export function CategoryPie({ data }: CategoryPieProps) {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1A1416',
-                  border: '1px solid #3A2A30',
+                  backgroundColor: '#2A1A20',
+                  border: '1px solid #5A3A45',
                   borderRadius: '8px',
                   fontSize: '12px',
+                  color: '#E7CFC4',
                 }}
+                labelStyle={{ color: '#CDAA5E', fontWeight: 600 }}
                 formatter={(value: number, name: string) => [
                   formatCurrency(value),
                   name,

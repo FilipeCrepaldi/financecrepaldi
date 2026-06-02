@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -17,11 +17,13 @@ import {
   Tags,
   Sun,
   Moon,
+  HelpCircle,
 } from 'lucide-react'
 import { useAuthStore, useInsightsStore } from '@/store'
 import { useTheme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
 import { QuickEntryBar } from './QuickEntryBar'
+import { WelcomeModal } from './WelcomeModal'
 import { TransactionFormModal } from '@/features/transactions/components/TransactionFormModal'
 
 const NAV_ITEMS = [
@@ -35,6 +37,7 @@ const NAV_ITEMS = [
   { to: '/categories', icon: Tags, label: 'Categorias' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/insights', icon: Sparkles, label: 'Insights', badgeKey: 'insights' as const },
+  { to: '/help', icon: HelpCircle, label: 'Como usar?' },
 ]
 
 interface AppLayoutProps {
@@ -45,11 +48,23 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [quickEntryOpen, setQuickEntryOpen] = useState(false)
   const [newTransactionOpen, setNewTransactionOpen] = useState(false)
+  const [welcomeOpen, setWelcomeOpen] = useState(false)
   const { signOut, profile } = useAuthStore()
+
+  const closeWelcome = useCallback(() => {
+    setWelcomeOpen(false)
+    localStorage.removeItem('fm_show_welcome')
+  }, [])
   const insights = useInsightsStore((s) => s.insights)
   const unreadCount = insights.filter((i) => !i.is_read).length
   const navigate = useNavigate()
   const { theme, toggle: toggleTheme } = useTheme()
+
+  useEffect(() => {
+    if (profile && localStorage.getItem('fm_show_welcome') === 'true') {
+      setWelcomeOpen(true)
+    }
+  }, [profile])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -215,6 +230,14 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Modal de boas-vindas (primeira vez) */}
+      {welcomeOpen && profile && (
+        <WelcomeModal
+          userName={profile.full_name ?? 'por aqui'}
+          onClose={closeWelcome}
+        />
+      )}
 
       {/* Quick Entry Modal */}
       {quickEntryOpen && (

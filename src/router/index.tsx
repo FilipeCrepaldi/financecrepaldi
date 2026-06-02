@@ -17,6 +17,7 @@ const MerchantsPage = lazy(() => import('@/features/merchants/components/Merchan
 const CardsPage = lazy(() => import('@/features/cards/components/CardsPage'))
 const AccountsPage = lazy(() => import('@/features/accounts/components/AccountsPage'))
 const CategoriesPage = lazy(() => import('@/features/categories/components/CategoriesPage'))
+const HelpPage = lazy(() => import('@/features/help/components/HelpPage'))
 
 // Guard de rota autenticada
 function ProtectedRoute() {
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
       { path: '/cards', element: <CardsPage /> },
       { path: '/accounts', element: <AccountsPage /> },
       { path: '/categories', element: <CategoriesPage /> },
+      { path: '/help', element: <HelpPage /> },
     ],
   },
   {

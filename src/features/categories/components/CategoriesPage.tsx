@@ -1,9 +1,39 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, X, Check, Globe } from 'lucide-react'
+import {
+  Plus, Pencil, Trash2, X, Check, Globe,
+  Utensils, Car, Home, HeartPulse, Gamepad2, GraduationCap,
+  Repeat, ShoppingBag, TrendingUp, Banknote, Briefcase,
+  CircleEllipsis, type LucideProps,
+} from 'lucide-react'
 import { useAuthStore, useTransactionStore } from '@/store'
 import { categoriesService } from '@/services'
 import type { Category, CategoryType } from '@/types'
 import { cn } from '@/lib/utils'
+
+type LucideIconComponent = React.FC<LucideProps>
+
+const LUCIDE_ICONS: Record<string, LucideIconComponent> = {
+  utensils: Utensils,
+  car: Car,
+  home: Home,
+  'heart-pulse': HeartPulse,
+  'gamepad-2': Gamepad2,
+  'graduation-cap': GraduationCap,
+  repeat: Repeat,
+  'shopping-bag': ShoppingBag,
+  'trending-up': TrendingUp,
+  banknote: Banknote,
+  briefcase: Briefcase,
+  'circle-ellipsis': CircleEllipsis,
+}
+
+function CategoryIconDisplay({ icon, name, color, size = 14 }: { icon?: string | null; name: string; color?: string | null; size?: number }) {
+  if (icon && LUCIDE_ICONS[icon]) {
+    const Icon = LUCIDE_ICONS[icon]
+    return <Icon size={size} color={color ?? '#E7CFC4'} />
+  }
+  return <>{icon ?? name.charAt(0).toUpperCase()}</>
+}
 
 const PRESET_COLORS = [
   '#7B1E3A', '#22c55e', '#f97316', '#ef4444', '#3b82f6',
@@ -285,7 +315,7 @@ export default function CategoriesPage() {
                     className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
                     style={{ backgroundColor: cat.color ?? '#7B1E3A' }}
                   >
-                    {cat.icon ?? cat.name.charAt(0).toUpperCase()}
+                    <CategoryIconDisplay icon={cat.icon} name={cat.name} color="#fff" size={14} />
                   </span>
                   <span className="flex-1 text-sm text-text-primary">{cat.name}</span>
                   <span
@@ -357,7 +387,7 @@ export default function CategoriesPage() {
                 className="w-6 h-6 rounded-md flex items-center justify-center text-xs flex-shrink-0"
                 style={{ backgroundColor: cat.color ?? '#7B1E3A' }}
               >
-                {cat.icon ?? cat.name.charAt(0)}
+                <CategoryIconDisplay icon={cat.icon} name={cat.name} color="#fff" size={12} />
               </span>
               <span className="text-sm text-text-secondary truncate">{cat.name}</span>
             </div>

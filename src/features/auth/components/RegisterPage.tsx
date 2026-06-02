@@ -15,8 +15,13 @@ export default function RegisterPage() {
     e.preventDefault()
     setError(null)
     try {
-      await signUp(email, password, name)
-      setDone(true)
+      const { needsConfirmation } = await signUp(email, password, name)
+      if (needsConfirmation) {
+        setDone(true)
+      } else {
+        // login automático via onAuthStateChange — seta flag para exibir modal de boas-vindas
+        localStorage.setItem('fm_show_welcome', 'true')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar conta')
     }
@@ -30,7 +35,8 @@ export default function RegisterPage() {
         </div>
         <h2 className="text-xl font-semibold text-text-primary mb-2">Conta criada!</h2>
         <p className="text-text-secondary text-sm mb-8 text-center max-w-xs">
-          Verifique seu e-mail para confirmar a conta antes de entrar.
+          Enviamos um e-mail de confirmação para <strong>{email}</strong>.
+          Clique no link do e-mail e depois volte para entrar.
         </p>
         <Link to="/login" className="btn-primary rounded-2xl px-8 py-3 text-sm font-semibold">
           Ir para login
