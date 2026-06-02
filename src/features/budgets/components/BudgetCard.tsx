@@ -44,7 +44,7 @@ export function BudgetCard({ budget, spent, daysRemaining, onEdit, onDelete }: B
         <div className="flex items-center gap-2 min-w-0">
           <div
             className="w-2.5 h-2.5 rounded-full shrink-0"
-            style={{ backgroundColor: budget.category?.color ?? '#7c6af7' }}
+            style={{ backgroundColor: budget.category?.color ?? '#7B1E3A' }}
           />
           <h3 className="text-text-primary font-medium truncate">
             {budget.category?.name ?? 'Sem categoria'}

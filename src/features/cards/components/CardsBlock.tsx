@@ -94,7 +94,7 @@ export function CardsBlock() {
                 <div className="flex items-center gap-2 min-w-0">
                   <div
                     className="w-8 h-5 rounded shrink-0"
-                    style={{ backgroundColor: card.color ?? '#7c6af7' }}
+                    style={{ backgroundColor: card.color ?? '#7B1E3A' }}
                   />
                   <div className="min-w-0">
                     <p className="text-text-primary text-sm font-medium truncate">

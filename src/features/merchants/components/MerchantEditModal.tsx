@@ -19,8 +19,8 @@ const KIND_OPTIONS: { value: MerchantKind; label: string }[] = [
 ]
 
 const COLOR_PRESETS = [
-  '#7c6af7', '#f43f5e', '#22c55e', '#f59e0b', '#3b82f6',
-  '#a855f7', '#ec4899', '#06b6d4', '#84cc16', '#f97316',
+  '#7B1E3A', '#f43f5e', '#22c55e', '#f59e0b', '#3b82f6',
+  '#BE4B6B', '#ec4899', '#06b6d4', '#84cc16', '#f97316',
 ]
 
 export function MerchantEditModal({ merchant, onClose }: MerchantEditModalProps) {

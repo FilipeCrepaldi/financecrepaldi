@@ -50,7 +50,7 @@ export default function RegisterPage() {
         />
         <div className="text-center">
           <h1 className="text-2xl font-bold text-text-primary tracking-tight leading-none">
-            finance<span className="text-rubi">-</span>mirror
+            Finance Mirror
           </h1>
           <p className="text-[11px] text-text-muted uppercase tracking-[0.2em] mt-1.5">
             Seu reflexo financeiro.

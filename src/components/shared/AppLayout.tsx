@@ -91,21 +91,17 @@ export function AppLayout({ children }: AppLayoutProps) {
           'flex flex-col transition-transform duration-200',
           'bg-background-secondary border-r border-border',
           'shadow-lg',
-          'lg:translate-x-0 lg:static lg:z-auto',
+          'lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:z-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         {/* Logo */}
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-accent rounded-lg flex items-center justify-center shadow-glow-wine">
-              <Zap size={13} className="text-white" strokeWidth={2.5} />
-            </div>
-            <div className="leading-tight">
-              <span className="font-semibold text-text-primary text-sm tracking-tight">
-                finance<span className="text-rubi">-</span>mirror
-              </span>
-            </div>
+            <img src="/logo.png" alt="Finance Mirror" className="w-8 h-8 object-contain" />
+            <span className="font-semibold text-text-primary text-sm tracking-tight">
+              Finance Mirror
+            </span>
           </div>
           <button
             className="lg:hidden p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-background-tertiary transition-colors"

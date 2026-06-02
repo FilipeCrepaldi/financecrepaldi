@@ -219,7 +219,7 @@ export default function MerchantsPage() {
             const selected = selectedIds.has(m.id)
             const isConfirming = confirmingDelete === m.id
             const category = categories.find((c) => c.id === m.default_category_id)
-            const dotColor = m.color ?? category?.color ?? '#7c6af7'
+            const dotColor = m.color ?? category?.color ?? '#7B1E3A'
             return (
               <div
                 key={m.id}

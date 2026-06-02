@@ -12,8 +12,8 @@ interface CardEditModalProps {
 }
 
 const COLOR_PRESETS = [
-  '#7c6af7', '#f97316', '#f43f5e', '#22c55e', '#3b82f6',
-  '#a855f7', '#ec4899', '#06b6d4', '#84cc16', '#eab308',
+  '#7B1E3A', '#BE4B6B', '#CDAA5E', '#f43f5e', '#f97316',
+  '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#ec4899',
 ]
 
 export function CardEditModal({ card, onClose }: CardEditModalProps) {

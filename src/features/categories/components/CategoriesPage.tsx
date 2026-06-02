@@ -6,8 +6,8 @@ import type { Category, CategoryType } from '@/types'
 import { cn } from '@/lib/utils'
 
 const PRESET_COLORS = [
-  '#7c6af7', '#22c55e', '#f97316', '#ef4444', '#3b82f6',
-  '#eab308', '#ec4899', '#14b8a6', '#8b5cf6', '#64748b',
+  '#7B1E3A', '#22c55e', '#f97316', '#ef4444', '#3b82f6',
+  '#eab308', '#ec4899', '#14b8a6', '#BE4B6B', '#64748b',
 ]
 
 const TYPE_LABELS: Record<CategoryType, string> = {
@@ -23,7 +23,7 @@ interface FormState {
   type: CategoryType
 }
 
-const emptyForm: FormState = { name: '', icon: '', color: '#7c6af7', type: 'expense' }
+const emptyForm: FormState = { name: '', icon: '', color: '#7B1E3A', type: 'expense' }
 
 function CategoryForm({
   initial,
@@ -271,7 +271,7 @@ export default function CategoriesPage() {
               editingId === cat.id ? (
                 <CategoryForm
                   key={cat.id}
-                  initial={{ name: cat.name, icon: cat.icon ?? '', color: cat.color ?? '#7c6af7', type: cat.type }}
+                  initial={{ name: cat.name, icon: cat.icon ?? '', color: cat.color ?? '#7B1E3A', type: cat.type }}
                   onSave={(f) => handleUpdate(cat, f)}
                   onCancel={() => setEditingId(null)}
                   saving={saving}
@@ -283,7 +283,7 @@ export default function CategoriesPage() {
                 >
                   <span
                     className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
-                    style={{ backgroundColor: cat.color ?? '#7c6af7' }}
+                    style={{ backgroundColor: cat.color ?? '#7B1E3A' }}
                   >
                     {cat.icon ?? cat.name.charAt(0).toUpperCase()}
                   </span>
@@ -355,7 +355,7 @@ export default function CategoriesPage() {
             >
               <span
                 className="w-6 h-6 rounded-md flex items-center justify-center text-xs flex-shrink-0"
-                style={{ backgroundColor: cat.color ?? '#7c6af7' }}
+                style={{ backgroundColor: cat.color ?? '#7B1E3A' }}
               >
                 {cat.icon ?? cat.name.charAt(0)}
               </span>

@@ -2,7 +2,7 @@
 
 > "O extrato bancário é quase um diário psicológico automático."
 
-**Última atualização:** 2026-05-31
+**Última atualização:** 2026-06-02
 
 ---
 
@@ -419,8 +419,21 @@ Rotas protegidas via `ProtectedRoute` (redireciona para `/login` se não autenti
 ### ✅ Layout + Atalhos de teclado
 - Sidebar responsiva, topbar com botão "Lançar"
 - Lazy loading de páginas
-- Tema dark com design tokens customizados
 - **Atalhos:** `K` → Quick Entry, `N` → Nova transação (ignorados dentro de inputs; visíveis na topbar)
+
+### ✅ Redesign Visual (2026-06)
+Substituição completa da identidade visual — zero mudanças funcionais.
+
+| Item | Antes | Depois |
+|---|---|---|
+| Paleta | Violet `#7c6af7` | Wine `#7B1E3A` · Rubi `#BE4B6B` · Gold `#CDAA5E` · Bege `#E7CFC4` |
+| Fontes | DM Sans | Inter + JetBrains Mono |
+| Tema | Só dark | Dark (padrão) + Light — toggle no topbar, persistido em `localStorage` |
+| Sidebar | Segue tema da página | Sempre dark (`data-theme="dark"` fixo no `<aside>`) |
+| Logo | Ícone SVG genérico | Logo própria (`/logo.png`) com fundo transparente |
+| Favicon | `icon.svg` (inexistente) | `/logo.png` |
+| Variáveis CSS | Classes Tailwind diretas | Canais RGB (`rgb(var(--bg-rgb) / <alpha>)`) — permite opacity modifiers + switch dark/light |
+| Cores legado | Espalhadas em 20+ arquivos | Eliminadas — fallbacks padronizados: `#7B1E3A` (funcional) · `#CDAA5E` (tags) |
 
 ### ✅ Dashboard
 - Cards de resumo: saldo, receitas, despesas, % comprometido
@@ -733,4 +746,4 @@ Migrations não rodam automaticamente no deploy do frontend. Antes de fazer push
 
 ---
 
-*Documentação atualizada em 2026-05-31.*
+*Documentação atualizada em 2026-06-02.*

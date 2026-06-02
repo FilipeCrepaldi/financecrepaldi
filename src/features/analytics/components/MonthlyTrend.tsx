@@ -34,23 +34,23 @@ export function MonthlyTrend({ data }: MonthlyTrendProps) {
       <div className="w-full h-52">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2a38" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#3A2A30" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: '#9999a8', fontSize: 11 }}
+              tick={{ fill: '#8A6F76', fontSize: 11 }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              tick={{ fill: '#9999a8', fontSize: 11 }}
+              tick={{ fill: '#8A6F76', fontSize: 11 }}
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => formatCurrencyCompact(v)}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#1a1a24',
-                border: '1px solid #2a2a38',
+                backgroundColor: '#1A1416',
+                border: '1px solid #3A2A30',
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
@@ -83,7 +83,7 @@ export function MonthlyTrend({ data }: MonthlyTrendProps) {
               type="monotone"
               dataKey="balance"
               name="Saldo"
-              stroke="#7c6af7"
+              stroke="#CDAA5E"
               strokeWidth={2}
               strokeDasharray="4 4"
               dot={{ r: 2 }}

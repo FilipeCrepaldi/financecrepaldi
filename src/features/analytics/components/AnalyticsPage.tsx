@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
                     ? 'text-white border-transparent'
                     : 'bg-background-tertiary text-text-secondary border-border hover:text-text-primary',
                 )}
-                style={selected ? { backgroundColor: c.color ?? '#7c6af7' } : undefined}
+                style={selected ? { backgroundColor: c.color ?? '#7B1E3A' } : undefined}
               >
                 <CreditCard size={11} />
                 {c.name}

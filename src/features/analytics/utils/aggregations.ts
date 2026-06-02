@@ -195,7 +195,7 @@ export function aggregateByTag(transactions: Transaction[]): TagEntry[] {
         map.set(tag.id, {
           id: tag.id,
           name: tag.name,
-          color: tag.color ?? '#7c6af7',
+          color: tag.color ?? '#CDAA5E',
           amount: t.amount,
           count: 1,
           percent: 0,

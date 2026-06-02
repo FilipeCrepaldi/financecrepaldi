@@ -37,8 +37,8 @@ const STATUS_COLOR: Record<string, string> = {
 
 const CHART_STATUS_FILL: Record<string, string> = {
   paid: '#22c55e',
-  closed: '#7c6af7',
-  open: '#f59e0b',
+  closed: '#7B1E3A',
+  open: '#D4AF37',
 }
 
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
@@ -79,7 +79,7 @@ function InvoiceBarChart({ invoices }: InvoiceBarChartProps) {
         <BarChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: '#5a5a72' }}
+            tick={{ fontSize: 10, fill: '#8A6F76' }}
             axisLine={false}
             tickLine={false}
           />
@@ -88,19 +88,19 @@ function InvoiceBarChart({ invoices }: InvoiceBarChartProps) {
             formatter={(value: number) => [formatCurrency(value), 'Total']}
             labelFormatter={(label) => `Fatura ${label}`}
             contentStyle={{
-              backgroundColor: '#1e1e28',
-              border: '1px solid #2a2a38',
+              backgroundColor: '#241A1E',
+              border: '1px solid #3A2A30',
               borderRadius: 8,
               fontSize: 12,
-              color: '#f0f0f5',
+              color: '#F5EAE5',
             }}
-            cursor={{ fill: '#ffffff08' }}
+            cursor={{ fill: 'rgba(255,255,255,0.04)' }}
           />
           <Bar dataKey="total" radius={[3, 3, 0, 0]} maxBarSize={40}>
             {data.map((entry, idx) => (
               <Cell
                 key={idx}
-                fill={CHART_STATUS_FILL[entry.status] ?? '#7c6af7'}
+                fill={CHART_STATUS_FILL[entry.status] ?? '#7B1E3A'}
                 opacity={0.85}
               />
             ))}
@@ -276,7 +276,7 @@ function CardRow({
 
         <div
           className="w-10 h-7 rounded shrink-0"
-          style={{ backgroundColor: card.color ?? '#7c6af7' }}
+          style={{ backgroundColor: card.color ?? '#7B1E3A' }}
         />
 
         <div className="flex-1 min-w-0">

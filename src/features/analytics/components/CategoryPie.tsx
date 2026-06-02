@@ -57,8 +57,8 @@ export function CategoryPie({ data }: CategoryPieProps) {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1a1a24',
-                  border: '1px solid #2a2a38',
+                  backgroundColor: '#1A1416',
+                  border: '1px solid #3A2A30',
                   borderRadius: '8px',
                   fontSize: '12px',
                 }}
